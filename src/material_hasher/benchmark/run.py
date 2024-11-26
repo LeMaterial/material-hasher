@@ -18,7 +18,7 @@ Run the benchmark for a specific hasher:
 
     $ python -m material_hasher.benchmark.run --hasher lehash
 
-Use the hashers from the :mod:`material_hasher.hashers` module in your own code:
+Use the hashers from the :mod:`material_hasher.hashers` package in your own code:
 
 .. code-block:: python
 
@@ -41,7 +41,7 @@ def benchmark_hasher(
     test_cases: Optional[Iterable[str]] = None,
     ignore_test_cases: Optional[Iterable[str]] = None,
 ) -> dict[str, float]:
-    """Measure the performance of a hasher function based on test cases listed in the :module:`material_hasher.benchmark.test_cases` module.
+    """Measure the performance of a hasher function based on test cases listed in the :mod:`material_hasher.benchmark.test_cases` module.
 
     Parameters
     ----------
@@ -77,7 +77,18 @@ def benchmark_hasher(
     return times
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Run the benchmark for hashers.
+
+    This function provides a command-line interface to benchmark hashers.
+
+    Get help with:
+
+    .. code-block:: bash
+
+        $ python -m material_hasher.benchmark.run --help
+    """
     from argparse import ArgumentParser
 
     parser = ArgumentParser(description="Benchmark hashers.")
@@ -107,3 +118,7 @@ if __name__ == "__main__":
             hasher.hash, args.test_cases, args.ignore_test_cases
         )
         print(f"{hasher_name}: {hasher_time:.3f} s")
+
+
+if __name__ == "__main__":
+    main()

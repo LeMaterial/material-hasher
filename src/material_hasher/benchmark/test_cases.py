@@ -1,15 +1,7 @@
 from typing import Optional
 
-
-def get_all_test_cases() -> list[str]:
-    """Utility function to get a list of all available test cases.
-
-    Returns
-    -------
-    list[str]
-        List of all available test cases.
-    """
-    return ["gaussian_noise"]
+ALL_TEST_CASES = ["gaussian_noise"]
+"""List of all test cases available in the benchmark as ``list[str]``."""
 
 
 def make_test_cases(

@@ -16,4 +16,12 @@ dev = [
     "ipython>=8.29.0",
     "pre-commit>=4.0.1",
     "ruff>=0.8.0",
+    "shibuya>=2024.10.15",
+    "sphinx-autoapi>=3.3.2",
+    "sphinx-autodoc-typehints>=2.5.0",
+    "sphinx-code-include>=1.4.0",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-design>=0.6.1",
+    "sphinx-math-dollar>=1.2.1",
+    "sphinxawesome-theme>=5.3.2",
 ]

@@ -13,7 +13,7 @@ def make_test_cases(
     The procedure is as follows:
 
     1. If ``test_cases`` is not ``None``, include only the specified test cases.
-    2. Otherwise, if ``test_cases`` is ``None``, include all test cases (from :func:`get_all_test_cases`).
+    2. Otherwise, if ``test_cases`` is ``None``, include all test cases (from :const:`ALL_TEST_CASES`).
     3. If ``ignore_test_cases`` is not ``None``, filter the list of test cases to exclude the specified test cases.
 
     Parameters
@@ -35,7 +35,7 @@ def make_test_cases(
     ValueError
         If the resulting list of test cases is empty.
     """
-    all_test_cases = get_all_test_cases()
+    all_test_cases = ALL_TEST_CASES.copy()
 
     if test_cases is None:
         test_cases = all_test_cases

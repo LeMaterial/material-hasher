@@ -4,7 +4,13 @@ from typing import Optional, Union
 import numpy as np
 from pymatgen.core import Structure, SymmOp
 
-ALL_TEST_CASES = ["gaussian_noise"]
+ALL_TEST_CASES = [
+    "gaussian_noise",
+    "isometric_strain",
+    "strain",
+    "translation",
+    "symm_ops",
+]
 """List of all test cases available in the benchmark as ``list[str]``."""
 
 
@@ -81,7 +87,7 @@ def get_new_structure_with_translation(
 
 def get_new_structure_with_symm_ops(
     structure: Structure,
-    symm_ops: Union[SymmOp] = SymmOp.from_rotation_and_translation(),
+    symm_ops: Optional[list[SymmOp]] = None,
 ) -> Structure:
     """_summary_
 
@@ -92,8 +98,17 @@ def get_new_structure_with_symm_ops(
     Returns:
         Structure: new structure with modification
     """
+    if symm_ops is None:
+        symm_ops = [
+            SymmOp.from_rotation_and_translation()
+        ]  # Default to a list with one SymmOp
+
+    # Ensure symm_ops is a list and select one randomly
+    symm_op = random.choice(
+        symm_ops
+    )  # Use random.choice instead of random.choices for a single item
+
     s = structure.copy()
-    symm_op = random.choices(symm_ops)
     return s.apply_operation(symm_op)
 
 
@@ -166,5 +181,13 @@ def get_test_case(test_case: str) -> dict:
     """
     if test_case == "gaussian_noise":
         return get_new_structure_with_gaussian_noise
+    elif test_case == "isometric_strain":
+        return get_new_structure_with_isometric_strain
+    elif test_case == "strain":
+        return get_new_structure_with_strain
+    elif test_case == "translation":
+        return get_new_structure_with_translation
+    elif test_case == "symm_ops":
+        return get_new_structure_with_symm_ops
     else:
         raise ValueError(f"Unknown test case: {test_case}")

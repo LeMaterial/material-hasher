@@ -22,6 +22,15 @@ def load_structures():
     return structures
 
 
+def count_duplicates(hashes: list[str]) -> int:
+    """Count duplicates in the list of hashes."""
+    from collections import Counter
+
+    hash_counts = Counter(hashes)
+    duplicates = sum(count for count in hash_counts.values() if count > 1)
+    return duplicates
+
+
 def benchmark_hasher(
     hasher_func: Callable,
     test_cases: Optional[Iterable[str]] = None,
@@ -53,20 +62,36 @@ def benchmark_hasher(
     test_cases = make_test_cases(test_cases, ignore_test_cases)
     test_data = structure_data or load_structures()
 
-    times = {"total": 0.0}
+    results = {}
     for test_case in test_cases:
-        start_time = time()
-        for structure in test_data:
-            # Apply transformation
-            transformation = get_test_case(test_case)
-            transformed_structure = transformation(structure)
-            # Hash the transformed structure
-            hasher_func().get_material_hash(transformed_structure)
-        end_time = time()
-        times[test_case] = end_time - start_time
-        times["total"] += times[test_case]
+        func, params = get_test_case(test_case)
 
-    return times
+        case_results = {}
+        for param_name, param_values in params.items():
+            for param_value in param_values:
+                kwargs = {param_name: param_value}
+                start_time = time()
+                case_hashes = []
+                for structure in test_data:
+                    transformed_structure = func(structure, **kwargs)
+                    case_hashes.append(
+                        hasher_func().get_material_hash(transformed_structure)
+                    )
+                end_time = time()
+                param_key = f"{param_name}={param_value}"
+
+                duplicates = count_duplicates(case_hashes)
+
+                case_results[param_key] = {
+                    "execution_time": end_time - start_time,
+                    "duplicates": duplicates,
+                }
+
+        results[test_case] = {
+            "parameters": case_results,
+        }
+
+    return results
 
 
 def main():

@@ -10,8 +10,8 @@ class EntalpicMaterialsHasher:
         self,
         graphing_algorithm: str = "WL",
         bonding_algorithm: NearNeighbors = EconNN,
-        bonding_kwargs: dict = {},
-        include_composition: bool = False,
+        bonding_kwargs: dict = {"tol": 0.2, "cutoff": 10, "use_fictive_radius": True},
+        include_composition: bool = True,
         symmetry_labeling: str = "SPGLib",
     ):
         self.graphing_algorithm = graphing_algorithm

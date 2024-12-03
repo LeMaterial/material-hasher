@@ -23,7 +23,29 @@ def load_structures():
 
 
 def count_duplicates(hashes: list[str]) -> int:
-    """Count duplicates in the list of hashes."""
+    """
+    Count the number of duplicate entries in a list of hashes.
+
+    A duplicate is defined as any hash that occurs more than once in the list.
+    This function counts the total number of duplicate occurrences.
+
+    Parameters
+    ----------
+    hashes : list of str
+        A list of hash strings to analyze for duplicates.
+
+    Returns
+    -------
+    int
+        The total count of duplicate entries in the list. Each duplicate is counted
+        for the number of times it exceeds one occurrence.
+
+    Examples
+    --------
+    >>> hashes = ["abc123", "def456", "abc123", "xyz789", "abc123"]
+    >>> count_duplicates(hashes)
+    3
+    """
     from collections import Counter
 
     hash_counts = Counter(hashes)

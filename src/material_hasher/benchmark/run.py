@@ -22,37 +22,6 @@ def load_structures():
     return structures
 
 
-def count_duplicates(hashes: list[str]) -> int:
-    """
-    Count the number of duplicate entries in a list of hashes.
-
-    A duplicate is defined as any hash that occurs more than once in the list.
-    This function counts the total number of duplicate occurrences.
-
-    Parameters
-    ----------
-    hashes : list of str
-        A list of hash strings to analyze for duplicates.
-
-    Returns
-    -------
-    int
-        The total count of duplicate entries in the list. Each duplicate is counted
-        for the number of times it exceeds one occurrence.
-
-    Examples
-    --------
-    >>> hashes = ["abc123", "def456", "abc123", "xyz789", "abc123"]
-    >>> count_duplicates(hashes)
-    3
-    """
-    from collections import Counter
-
-    hash_counts = Counter(hashes)
-    duplicates = sum(count for count in hash_counts.values() if count > 1)
-    return duplicates
-
-
 def benchmark_hasher(
     hasher_func: Callable,
     test_cases: Optional[Iterable[str]] = None,
@@ -85,32 +54,50 @@ def benchmark_hasher(
     test_data = structure_data or load_structures()
 
     results = {}
-    for test_case in test_cases:
-        func, params = get_test_case(test_case)
+    i = 0
+    for structure in test_data:
+        i = i + 1
+        structure_key = f"structure {i}"
+        results[structure_key] = {}
 
         case_results = {}
-        for param_name, param_values in params.items():
-            for param_value in param_values:
-                kwargs = {param_name: param_value}
-                start_time = time()
-                case_hashes = []
-                for structure in test_data:
-                    transformed_structure = func(structure, **kwargs)
-                    case_hashes.append(
-                        hasher_func().get_material_hash(transformed_structure)
-                    )
-                end_time = time()
-                param_key = f"{param_name}={param_value}"
+        all_hash = []
+        start_time = time()
 
-                duplicates = count_duplicates(case_hashes)
+        original_hash = hasher_func(structure)
+        all_hash.append(original_hash)
 
-                case_results[param_key] = {
-                    "execution_time": end_time - start_time,
-                    "duplicates": duplicates,
-                }
+        for test_case in test_cases:
+            print(test_case)
+            func, params = get_test_case(test_case)
 
-        results[test_case] = {
-            "parameters": case_results,
+            test_case_key = f"{test_case}"
+            case_results[test_case_key] = {}
+            for param_name, param_values in params.items():
+                for param_value in param_values:
+                    kwargs = {param_name: param_value}
+
+                    case_hashes = [
+                        hasher_func().get_material_hash(func(structure, **kwargs))
+                        for _ in range(100)
+                    ]
+
+                    all_hash = all_hash + case_hashes
+
+                    param_key = f"{param_name}={param_value}"
+
+                    case_results[test_case_key][param_key] = {
+                        "hashes": case_hashes,
+                        "different_hashes": len(set(case_hashes)),
+                    }
+
+        end_time = time()
+
+        print("case_results", case_results)
+
+        results[structure_key] = {
+            "different_hashes": len(set(all_hash)),
+            "compute_time": end_time - start_time,
         }
 
     return results

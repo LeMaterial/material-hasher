@@ -19,7 +19,7 @@ class TestBenchmark_HG:
         # Convert dataset to Pandas DataFrame
         df = ds["train"]
         print("Loaded dataset:", len(df))
-        #df = df.select(range(3))
+        df = df.select(range(3))
 
         # Transform dataset int pymatgen Structure objects
         structure_data = []

@@ -3,7 +3,10 @@ from typing import Callable, Iterable, Optional
 
 from pymatgen.core import Structure
 
-from material_hasher.benchmark.test_cases import make_test_cases
+from material_hasher.benchmark.test_cases import (
+    make_test_cases,
+    get_test_case,
+)
 from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
 from material_hasher.hasher.example import SimpleCompositionHasher
 
@@ -48,19 +51,56 @@ def benchmark_hasher(
     """
 
     test_cases = make_test_cases(test_cases, ignore_test_cases)
-
     test_data = structure_data or load_structures()
 
-    times = {"total": 0.0}
-    for test_case in test_cases:
-        start_time = time()
-        for structure in test_data:
-            hasher_func().get_material_hash(structure)
-        end_time = time()
-        times[test_case] = end_time - start_time
-        times["total"] += times[test_case]
+    results = {}
+    i = 0
+    for structure in test_data:
+        i = i + 1
+        structure_key = f"structure {i}"
+        results[structure_key] = {}
 
-    return times
+        case_results = {}
+        all_hash = []
+        start_time = time()
+
+        original_hash = hasher_func(structure)
+        all_hash.append(original_hash)
+
+        for test_case in test_cases:
+            print(test_case)
+            func, params = get_test_case(test_case)
+
+            test_case_key = f"{test_case}"
+            case_results[test_case_key] = {}
+            for param_name, param_values in params.items():
+                for param_value in param_values:
+                    kwargs = {param_name: param_value}
+
+                    case_hashes = [
+                        hasher_func().get_material_hash(func(structure, **kwargs))
+                        for _ in range(100)
+                    ]
+
+                    all_hash = all_hash + case_hashes
+
+                    param_key = f"{param_name}={param_value}"
+
+                    case_results[test_case_key][param_key] = {
+                        "hashes": case_hashes,
+                        "different_hashes": len(set(case_hashes)),
+                    }
+
+        end_time = time()
+
+        print("case_results", case_results)
+
+        results[structure_key] = {
+            "different_hashes": len(set(all_hash)),
+            "compute_time": end_time - start_time,
+        }
+
+    return results
 
 
 def main():

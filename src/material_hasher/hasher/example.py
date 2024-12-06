@@ -12,3 +12,4 @@ class SimpleCompositionHasher:
 
     def get_material_hash(self, structure: Structure) -> str:
         return structure.composition.reduced_formula
+

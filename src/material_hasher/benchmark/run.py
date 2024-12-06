@@ -1,45 +1,29 @@
-"""
-Benchmark hashers.
-
-This module provides a command-line interface to benchmark hashers. It can be run as a script or imported as a module.
-
-Examples
---------
-
-Run the benchmark for all hashers:
-
-.. code-block:: bash
-
-    $ python -m material_hasher.benchmark.run --hasher all
-
-Run the benchmark for a specific hasher:
-
-.. code-block:: bash
-
-    $ python -m material_hasher.benchmark.run --hasher lehash
-
-Use the hashers from the :mod:`material_hasher.hashers` package in your own code:
-
-.. code-block:: python
-
-    from material_hasher.hashers import LeHasher
-
-    hasher = LeHasher()
-    ...
-
-"""
-
 from time import time
 from typing import Callable, Iterable, Optional
 
-from material_hasher.benchmark.test_cases import get_test_data, make_test_cases
-from material_hasher.hashers import hashers
+from pymatgen.core import Structure
+
+from material_hasher.benchmark.test_cases import make_test_cases
+from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
+from material_hasher.hasher.example import SimpleCompositionHasher
+
+HASHERS = {
+    "Entalpic": EntalpicMaterialsHasher,
+    "SimpleComposition": SimpleCompositionHasher,
+}
+
+
+def load_structures():
+    structures = []
+
+    return structures
 
 
 def benchmark_hasher(
     hasher_func: Callable,
     test_cases: Optional[Iterable[str]] = None,
     ignore_test_cases: Optional[Iterable[str]] = None,
+    structure_data: Optional[Iterable[Structure]] = None,
 ) -> dict[str, float]:
     """Measure the performance of a hasher function based on test cases listed in the :mod:`material_hasher.benchmark.test_cases` module.
 
@@ -65,11 +49,13 @@ def benchmark_hasher(
 
     test_cases = make_test_cases(test_cases, ignore_test_cases)
 
+    test_data = structure_data or load_structures()
+
     times = {"total": 0.0}
     for test_case in test_cases:
         start_time = time()
-        test_data = get_test_data(test_case)
-        hasher_func(test_data)
+        for structure in test_data:
+            hasher_func().get_material_hash(structure)
         end_time = time()
         times[test_case] = end_time - start_time
         times["total"] += times[test_case]
@@ -94,7 +80,7 @@ def main():
     parser = ArgumentParser(description="Benchmark hashers.")
     parser.add_argument(
         "--hasher",
-        choices=list(hashers.keys()) + ["all"],
+        choices=list(HASHERS.keys()) + ["all"],
         help="The name of the hasher to benchmark.",
     )
     parser.add_argument(
@@ -109,7 +95,7 @@ def main():
     )
     args = parser.parse_args()
 
-    for hasher_name, hasher_class in hashers.items():
+    for hasher_name, hasher_class in HASHERS.items():
         if args.hasher != "all" and hasher_name != args.hasher:
             continue
 

@@ -5,7 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 authors = [{ name = "vict0rsch", email = "victor.schmidt@entalpic.ai" }]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pymatgen>=2024.11.13",
+    "structuregraph-helpers>=0.0.9",
+]
 
 [build-system]
 requires = ["hatchling"]

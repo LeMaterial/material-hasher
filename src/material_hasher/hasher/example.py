@@ -7,9 +7,8 @@ class SimpleCompositionHasher:
     This is just a demo.
     """
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, *kwargs) -> None:
+        self.kwargs = kwargs
 
     def get_material_hash(self, structure: Structure) -> str:
         return structure.composition.reduced_formula
-

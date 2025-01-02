@@ -6,6 +6,7 @@ readme = "README.md"
 authors = [{ name = "vict0rsch", email = "victor.schmidt@entalpic.ai" }]
 requires-python = ">=3.10"
 dependencies = [
+    "datasets>=3.2.0",
     "pymatgen>=2024.11.13",
     "structuregraph-helpers>=0.0.9",
 ]

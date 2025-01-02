@@ -1,23 +1,27 @@
 import random
 from typing import Optional, Union
+import inspect 
+
 
 import numpy as np
 from pymatgen.core import Structure, SymmOp
 
 ALL_TEST_CASES = [
     "gaussian_noise",
-    "isometric_strain",
-    "strain",
-    "translation",
-    "symm_ops",
+    #"isometric_strain",
+    #"strain",
+    #"translation",
+    #"symm_ops",
 ]
 
+#    "gaussian_noise": {"sigma": np.arange(0, 0.31, 0.01).tolist()},
+
 PARAMETERS = {
-    "gaussian_noise": {"sigma": [0.001, 0.005, 0.01, 0.05]},
-    "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
-    "strain": {"sigma": [0.01, 0.1, 0.3]},
-    "translation": {"sigma": [0.01, 0.1, 0.3]},
-    "symm_ops": {},  # No additional parameters
+    "gaussian_noise": {"sigma": [0.001, 0.003]},
+    #"isometric_strain": {"pct": [0.8, 1.0, 1.2]},
+    #"strain": {"sigma": [0.01, 0.1, 0.3]},
+    #"translation": {"sigma": [0.01, 0.1, 0.3]},
+    #"symm_ops": {},  # No additional parameters
 }
 
 
@@ -173,8 +177,10 @@ def make_test_cases(
     return all_test_cases
 
 
-def get_test_case(test_case: str) -> dict:
-    """Utility function to get test data for a given test case.
+
+def get_test_case(test_case: str) -> tuple:
+    """
+    Utility function to get test data for a given test case.
 
     Parameters
     ----------
@@ -183,18 +189,28 @@ def get_test_case(test_case: str) -> dict:
 
     Returns
     -------
-    dict
-        Dictionary of test data.
+    tuple
+        Function and corresponding parameters for the test case.
+
+    Raises
+    ------
+    ValueError
+        If the test case or corresponding function is not found.
     """
-    if test_case == "gaussian_noise":
-        return get_new_structure_with_gaussian_noise, PARAMETERS["gaussian_noise"]
-    elif test_case == "isometric_strain":
-        return get_new_structure_with_isometric_strain, PARAMETERS["isometric_strain"]
-    elif test_case == "strain":
-        return get_new_structure_with_strain, PARAMETERS["strain"]
-    elif test_case == "translation":
-        return get_new_structure_with_translation, PARAMETERS["translation"]
-    elif test_case == "symm_ops":
-        return get_new_structure_with_symm_ops, PARAMETERS["symm_ops"]
-    else:
-        raise ValueError(f"Unknown test case: {test_case}")
+    # Get the current module
+    module = inspect.getmodule(inspect.currentframe())
+
+    # Create the function name dynamically
+    func_name = f"get_new_structure_with_{test_case}"
+
+    # Check if the function exists in the module
+    if not hasattr(module, func_name):
+        raise ValueError(f"Function {func_name} not found in module {module.__name__}")
+
+    # Check if test_case exists in PARAMETERS
+    if test_case not in PARAMETERS:
+        raise ValueError(f"Test case {test_case} not found in PARAMETERS")
+
+    # Retrieve the function and parameters
+    function = getattr(module, func_name)
+    return function, PARAMETERS[test_case]

@@ -22,7 +22,7 @@ PARAMETERS = {
 
 
 def get_new_structure_with_gaussian_noise(
-    structure: Structure, sigma: float 
+    structure: Structure, sigma: float
 ) -> Structure:
     """Returns new structure with gaussian noise on atomic positions
 
@@ -58,9 +58,7 @@ def get_new_structure_with_isometric_strain(
     return s.scale_lattice(structure.volume * pct)
 
 
-def get_new_structure_with_strain(
-    structure: Structure, sigma: float 
-) -> Structure:
+def get_new_structure_with_strain(structure: Structure, sigma: float) -> Structure:
     """_summary_
 
     Args:
@@ -74,9 +72,7 @@ def get_new_structure_with_strain(
     return s.apply_strain(np.random.normal(np.zeros(3), sigma))
 
 
-def get_new_structure_with_translation(
-    structure: Structure, sigma: float
-) -> Structure:
+def get_new_structure_with_translation(structure: Structure, sigma: float) -> Structure:
     """_summary_
 
     Args:

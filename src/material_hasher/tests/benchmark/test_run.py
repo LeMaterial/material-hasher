@@ -1,5 +1,5 @@
+from datasets import VerificationMode, load_dataset
 from pymatgen.core import Structure
-from datasets import load_dataset, VerificationMode
 
 from material_hasher.benchmark.run import HASHERS, benchmark_hasher
 from material_hasher.benchmark.test_cases import ALL_TEST_CASES
@@ -54,7 +54,6 @@ class TestBenchmark_HG:
 
 class TestBenchmark:
     def test_run(self):
-
         structure_data = [
             Structure([[4, 0, 0], [0, 4, 0], [0, 0, 4]], ["Si"], [[0, 0, 0]]),
             Structure([[4, 0, 0], [0, 4, 0], [0, 0, 4]], ["Si"], [[0, 0, 0]]),

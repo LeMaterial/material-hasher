@@ -3,16 +3,15 @@ from typing import Callable, Iterable, Optional
 
 from pymatgen.core import Structure
 
-from material_hasher.benchmark.test_cases import (
-    make_test_cases,
-    get_test_case,
-)
+from material_hasher.benchmark.test_cases import get_test_case, make_test_cases
+from material_hasher.hasher.cloud import CloudHasher
 from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
 from material_hasher.hasher.example import SimpleCompositionHasher
 
 HASHERS = {
     "Entalpic": EntalpicMaterialsHasher,
     "SimpleComposition": SimpleCompositionHasher,
+    "CLOUD": CloudHasher,
 }
 
 

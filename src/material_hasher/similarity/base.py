@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
+import numpy as np
 from pymatgen.core import Structure
 
+from material_hasher.types import StructureEquivalenceChecker
 
-class SimilarityMatcherBase(ABC):
+
+class SimilarityMatcherBase(ABC, StructureEquivalenceChecker):
     """Abstract class for similarity matching between structures."""
 
     @abstractmethod
@@ -27,15 +30,15 @@ class SimilarityMatcherBase(ABC):
         pass
 
     @abstractmethod
-    def are_similar(
+    def is_equivalent(
         self,
         structure1: Structure,
         structure2: Structure,
         threshold: Optional[float] = None,
     ) -> bool:
-        """Returns True if the two structures are similar according to the
+        """Returns True if the two structures are equivalent according to the
         implemented algorithm.
-        Uses a threshold to determine similarity if provided and the algorithm
+        Uses a threshold to determine equivalence if provided and the algorithm
         does not have a built-in threshold.
 
         Parameters
@@ -54,3 +57,48 @@ class SimilarityMatcherBase(ABC):
             True if the two structures are similar, False otherwise.
         """
         pass
+
+    def get_pairwise_similarity_scores(
+        self,
+        structures: list[Structure],
+    ) -> np.ndarray:
+        """Returns a matrix of similarity scores between structures.
+
+        Parameters
+        ----------
+        structures : list[Structure]
+            List of structures to compare.
+
+        Returns
+        -------
+        np.ndarray
+            Matrix of similarity scores between structures.
+        """
+
+        n = len(structures)
+        scores = np.zeros((n, n))
+
+        for i, structure1 in enumerate(structures):
+            for j, structure2 in enumerate(structures):
+                scores[i, j] = self.get_similarity_score(structure1, structure2)
+
+        return scores
+
+    def get_pairwise_equivalence(
+        self, structures: list[Structure], threshold: Optional[float] = None
+    ) -> np.ndarray:
+        """Returns a matrix of equivalence between structures.
+
+        Parameters
+        ----------
+        structures : list[Structure]
+            List of structures to compare.
+        threshold : float, optional
+
+        Returns
+        -------
+        np.ndarray
+            Matrix of equivalence between structures.
+        """
+
+        return self.get_pairwise_similarity_scores(structures) >= threshold

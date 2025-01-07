@@ -78,9 +78,14 @@ class SimilarityMatcherBase(ABC, StructureEquivalenceChecker):
         n = len(structures)
         scores = np.zeros((n, n))
 
+        # Fill triu + diag
         for i, structure1 in enumerate(structures):
             for j, structure2 in enumerate(structures):
-                scores[i, j] = self.get_similarity_score(structure1, structure2)
+                if i <= j:
+                    scores[i, j] = self.get_similarity_score(structure1, structure2)
+
+        # Fill tril
+        scores = scores + scores.T - np.diag(np.diag(scores))
 
         return scores
 

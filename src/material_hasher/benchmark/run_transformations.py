@@ -9,14 +9,8 @@ from datasets import load_dataset, VerificationMode, concatenate_datasets, Datas
 from material_hasher.benchmark.transformations import (
     get_test_case,
 )
-from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
-from material_hasher.hasher.example import SimpleCompositionHasher
-
-HASHERS = {
-    "Entalpic": EntalpicMaterialsHasher,
-    "SimpleComposition": SimpleCompositionHasher,
-    # "PDD": PDDMaterialsHasher,  # Ajout du PDD hasher
-}
+from material_hasher.benchmark.utils import get_structure_from_dict
+from material_hasher.hasher import HASHERS
 
 
 def get_hugging_face_dataset(token: Optional[str] = None) -> Dataset:
@@ -98,12 +92,7 @@ def get_data_from_hugging_face(token: Optional[str] = None) -> list[Structure]:
     for row in df:
         try:
             # Construct the Structure object
-            struct = Structure(
-                lattice=row["lattice_vectors"],
-                species=row["species_at_sites"],
-                coords=row["cartesian_site_positions"],
-                coords_are_cartesian=True,
-            )
+            struct = get_structure_from_dict(row)
             structure_data.append(struct)
 
         except Exception as e:
@@ -368,7 +357,7 @@ def main():
 
     .. code-block:: bash
 
-        $ python -m material_hasher.benchmark.run --help
+        $ python -m material_hasher.benchmark.run_transformations --help
     """
     from argparse import ArgumentParser
 

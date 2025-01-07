@@ -1,7 +1,7 @@
-from collections import defaultdict
 from typing import List, Dict
-from material_hasher.similarity.eqv2 import EquiformerV2Embedder
+from material_hasher.types import StructureEquivalenceChecker
 from pymatgen.core import Structure
+from material_hasher.benchmark.utils import get_structure_from_dict
 
 from datasets import load_dataset, Dataset
 import tqdm
@@ -9,7 +9,6 @@ import tqdm
 import numpy as np
 import pandas as pd
 
-from material_hasher.types import StructureEquivalenceChecker
 
 HF_DISORDERED_PATH = "LeMaterial/sqs_materials"
 
@@ -65,15 +64,7 @@ def get_group_structures_from_data(
     ):
         pbar.set_postfix_str(str(len(indices)))
         group_rows = hf_data.loc[indices]
-        rows = [
-            Structure(
-                lattice=[x for y in row["lattice_vectors"] for x in y],
-                species=row["species_at_sites"],
-                coords=row["cartesian_site_positions"],
-                coords_are_cartesian=True,
-            )
-            for _, row in group_rows.iterrows()
-        ]
+        rows = [get_structure_from_dict(row) for _, row in group_rows.iterrows()]
         groups_dict[group] = rows
 
     return groups_dict
@@ -94,7 +85,6 @@ def download_disordered_structures(
     groups_dict : dict
         Dictionary containing the structures grouped by chemical formula.
     """
-
     hf_data = load_dataset(hf_disordered_path, split="train")
     dataset = hf_data.to_pandas()
 
@@ -104,33 +94,49 @@ def download_disordered_structures(
 
 
 def get_dissimilar_structures(
-    groups_dict: Dict[str, List[Structure]],
-) -> Dict[str, List[Structure]]:
+    groups_dict: Dict[str, List[Structure]], n_picked_per_pair=10, seed=0
+) -> List[Structure]:
     """Get dissimilar structures from the groups dictionary.
 
     Parameters
     ----------
     groups_dict : dict
         Dictionary containing the structures grouped by chemical formula.
+    n_picked_per_pair : int
+        Number of pairs of structure to pick for two disjoint groups of structures.
+    seed : int
+        Seed for the random number generator.
 
     Returns
     -------
-    dissimilar_structures : dict
-        Dictionary containing the dissimilar structures.
+    dissimilar_structures : list
+        List of couples of dissimilar structures.
     """
+    from itertools import combinations
 
-    dissimilar_structures = defaultdict(list)
-    for group, structures in groups_dict.items():
-        if len(structures) < 2:
-            continue
-        dissimilar_structures[group] = structures
+    n_picked_per_pair = 10
+    np.random.seed(seed)
+    dissimilar_structures = []
+
+    all_group_names = list(groups_dict.keys())
+    all_pairs = list(combinations(all_group_names, 2))
+
+    for pair in all_pairs:
+        group1 = groups_dict[pair[0]]
+        group2 = groups_dict[pair[1]]
+        for _ in range(n_picked_per_pair):
+            structure1 = np.random.choice(list(range(len(group1))))
+            structure1 = group1[structure1]
+            structure2 = np.random.choice(list(range(len(group2))))
+            structure2 = group2[structure2]
+            dissimilar_structures.append((structure1, structure2))
 
     return dissimilar_structures
 
 
 def get_classification_results(equivalence: np.ndarray) -> dict:
     """Get classification metrics from the pairwise equivalence matrix.
-    The metrics are precision, recall, and f1 score.
+    Since all samples are labeled similar in this case, only the recall is interesting
 
     Parameters
     ----------
@@ -144,53 +150,39 @@ def get_classification_results(equivalence: np.ndarray) -> dict:
     """
 
     TP = np.sum(equivalence)
-    FP = np.sum(equivalence == 0)
     FN = np.sum(equivalence == 0)
-    precision = TP / (TP + FP)
     recall = TP / (TP + FN)
-    f1 = 2 * (precision * recall) / (precision + recall)
-    metrics = {"precision": precision, "recall": recall, "f1": f1}
+    metrics = {"recall": recall}
     return metrics
 
 
-def benchmark_disordered_structures(
-    hasher: StructureEquivalenceChecker,
-) -> pd.DataFrame:
-    """Benchmark the disordered structures using the given hasher.
+def get_classification_results_dissimilar(
+    dissimilar_structures: List[Structure],
+    structure_checker: StructureEquivalenceChecker,
+) -> Dict[str, float]:
+    """Get classification metrics from the dissimilar structures.
+    Only the recall is interesting in this case because all samples are labeled dissimilar (so positive in this case).
 
     Parameters
     ----------
-    hasher : StructureEquivalenceChecker
-        Hasher to use for benchmarking.
+    dissimilar_structures : List[Structure]
+        List of dissimilar structures.
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker.
 
     Returns
     -------
-    df_results : pd.DataFrame
-        Dataframe containing the results of the benchmarking.
+    metrics : Dict[str, float]
+        Dictionary containing the classification metrics.
     """
-    print("Downloading disordered structures...")
-    structures = download_disordered_structures()
-    results = defaultdict(dict)
+    TP = 0
+    FN = 0
+    for structure1, structure2 in tqdm.tqdm(dissimilar_structures, desc="Dissimilar"):
+        is_equivalent = structure_checker.is_equivalent(structure1, structure2)
+        TP += int(
+            not is_equivalent
+        )  # The structures are not equivalent, so the prediction is correct
+        FN += int(is_equivalent)
 
-    print("Benchmarking disordered structures...")
-    for group, structures in structures.items():
-        print(f"\n\n-- Group: {group} --")
-        pairwise_equivalence = hasher.get_pairwise_equivalence(structures)
-        triu_indices = np.triu_indices(len(structures), k=1)
-        equivalence = np.array(pairwise_equivalence)[triu_indices].astype(int)
-        metrics = get_classification_results(equivalence)
-        results[group] = metrics
-        print(f"Precision: {metrics['precision']}")
-        print(f"Recall: {metrics['recall']}")
-        print(f"F1: {metrics['f1']}")
-        print()
-
-    df_results = pd.DataFrame(results).T
-    print(df_results)
-
-    return df_results
-
-
-if __name__ == "__main__":
-    embedder = EquiformerV2Embedder(trained=True, cpu=False, threshold=0.01)
-    df_results = benchmark_disordered_structures(embedder)
+    recall = TP / (TP + FN)
+    return {"recall": recall}

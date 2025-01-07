@@ -17,7 +17,7 @@ HF_MODEL_REPO_ID = "fairchem/OMAT24"
 HF_MODEL_PATH = "eqV2_31M_omat_mp_salex.pt"
 
 
-class EquiformerV2Embedder(SimilarityMatcherBase):
+class EquiformerV2Similarity(SimilarityMatcherBase):
     """EquiformerV2 Embedder for structure similarity comparison.
     Designed for EquiformerV2 models trained on the OMAT24 dataset.
     These models can be found on the Hugging Face model hub at
@@ -41,8 +41,8 @@ class EquiformerV2Embedder(SimilarityMatcherBase):
 
     def __init__(
         self,
-        trained: bool,
-        cpu: bool,
+        trained: bool = True,
+        cpu: bool = False,
         threshold: float = 0.01,
         n_relaxation_steps: int = 0,
         model_path: Optional[Union[str, Path]] = None,

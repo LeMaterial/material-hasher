@@ -37,6 +37,8 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
         Path to the model checkpoint if downloaded, by default None
     load_from_hf : bool, optional
         Whether to download the model from the Hugging Face model hub, by default True. Note that you need to have access to the model on the Hugging Face model hub to download it.
+    agg_type : str
+        Aggregation type to use for the embeddings, by default "sum" which sums the normalized embeddings.
     """
 
     def __init__(
@@ -47,6 +49,7 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
         n_relaxation_steps: int = 0,
         model_path: Optional[Union[str, Path]] = None,
         load_from_hf: bool = True,
+        agg_type: str = "sum",
     ):
         self.model_path = model_path
         self.load_from_hf = load_from_hf
@@ -56,6 +59,9 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
 
         self.threshold = threshold
         self.n_relaxation_steps = n_relaxation_steps
+
+        assert agg_type in ["sum", "mean"], "Aggregation type not supported"
+        self.agg_type = agg_type
 
         self.calc = None
         self.features = {}
@@ -109,6 +115,15 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
                 .numpy()
             )
 
+            self.features["mean_norm_embeddings"] = (
+                output_embeddings.narrow(1, 0, 1)
+                .squeeze(1)
+                .mean(0)
+                .detach()
+                .cpu()
+                .numpy()
+            )
+
         self.calc.trainer.model.backbone.norm.register_forward_hook(hook_norm_block)
 
     def relax_atoms(self, atoms: ase.Atoms) -> ase.Atoms:
@@ -143,7 +158,10 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
         atoms = AseAtomsAdaptor.get_atoms(structure)
         atoms = self.relax_atoms(atoms)
 
-        return self.features["sum_norm_embeddings"]
+        if self.agg_type == "mean":
+            return self.features["mean_norm_embeddings"]
+        elif self.agg_type == "sum":
+            return self.features["sum_norm_embeddings"]
 
     def get_similarity_score(
         self, structure1: Structure, structure2: Structure

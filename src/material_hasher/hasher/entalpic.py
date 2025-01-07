@@ -9,6 +9,11 @@ from typing import Optional
 from material_hasher.hasher.base import HasherBase
 
 
+def shorten_hash(hash):
+    split = hash.split("_")
+    return split[0] + "_" + split[2]
+
+
 class EntalpicMaterialsHasher(HasherBase):
     def __init__(
         self,

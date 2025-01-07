@@ -7,11 +7,6 @@ from pymatgen.core.structure import Structure
 from material_hasher.similarity.base import SimilarityMatcherBase
 
 
-def shorten_hash(hash):
-    split = hash.split("_")
-    return split[0] + "_" + split[2]
-
-
 class PymatgenStructureSimilarity(SimilarityMatcherBase):
     """Implementation of the StructureMatcherBase using pymatgen's StructureMatcher."""
 

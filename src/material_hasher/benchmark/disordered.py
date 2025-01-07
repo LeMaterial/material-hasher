@@ -194,7 +194,3 @@ def benchmark_disordered_structures(
 if __name__ == "__main__":
     embedder = EquiformerV2Embedder(trained=True, cpu=False, threshold=0.01)
     df_results = benchmark_disordered_structures(embedder)
-
-    import ipdb
-
-    ipdb.set_trace()

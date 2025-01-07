@@ -30,7 +30,7 @@ class SimilarityMatcherBase(ABC, StructureEquivalenceChecker):
         pass
 
     @abstractmethod
-    def is_equivalent(
+    def are_similar(
         self,
         structure1: Structure,
         structure2: Structure,
@@ -84,6 +84,7 @@ class SimilarityMatcherBase(ABC, StructureEquivalenceChecker):
 
         return scores
 
+    @abstractmethod
     def get_pairwise_equivalence(
         self, structures: list[Structure], threshold: Optional[float] = None
     ) -> np.ndarray:
@@ -94,11 +95,12 @@ class SimilarityMatcherBase(ABC, StructureEquivalenceChecker):
         structures : list[Structure]
             List of structures to compare.
         threshold : float, optional
+            Threshold to determine similarity, by default None and the
+            algorithm's default threshold is used if it exists.
 
         Returns
         -------
         np.ndarray
             Matrix of equivalence between structures.
         """
-
-        return self.get_pairwise_similarity_scores(structures) >= threshold
+        pass

@@ -1,9 +1,15 @@
 from collections import defaultdict
-from pathlib import Path
+from material_hasher.similarity.eqv2 import EquiformerV2Embedder
+from pymatgen.core import Structure
+
+from datasets import load_dataset
+import tqdm
 
 import numpy as np
 import pandas as pd
 from pymatgen.io.cif import CifParser
+
+HF_DISORDERED_PATH = "LeMaterial/sqs_materials"
 
 
 def parse_cif(cif_file):
@@ -12,18 +18,25 @@ def parse_cif(cif_file):
     return structure
 
 
-def get_disordered_structures():
-    structures_path = Path("data/examples")
-    groups = {}
-    groups_names = [f for f in structures_path.iterdir() if f.is_dir()]
-    for group in groups_names:
-        structures = []
-        for cif_file in (group / "results").glob("*.cif"):
-            structure = parse_cif(cif_file)
-            structures.append(structure)
-        groups[group.name] = structures
+def download_disordered_structures():
+    dataset = load_dataset(HF_DISORDERED_PATH, split="train").to_pandas()
 
-    return groups
+    groups = dataset.groupby("chemical_formula_descriptive").indices
+    groups_dict = {group: dataset.loc[indices] for group, indices in groups.items()}
+
+    for group, group_rows in tqdm.tqdm(groups_dict.items(), desc="Downloading CIFs"):
+        rows = [
+            Structure(
+                lattice=[x for y in row["lattice_vectors"] for x in y],
+                species=row["species_at_sites"],
+                coords=row["cartesian_site_positions"],
+                coords_are_cartesian=True,
+            )
+            for _, row in group_rows.iterrows()
+        ]
+        groups_dict[group] = rows
+
+    return groups_dict
 
 
 def get_classification_results(equivalence):
@@ -54,9 +67,13 @@ def benchmark_hasher(hasher, structures):
 
 
 if __name__ == "__main__":
-    structures = get_disordered_structures()
+    structures = download_disordered_structures()
 
-    from material_hasher.similarity.eqv2 import EquiformerV2Embedder
+    # structures = get_disordered_structures()
 
     embedder = EquiformerV2Embedder(trained=True, cpu=False, threshold=0.01)
     df_results = benchmark_hasher(embedder, structures)
+
+    import ipdb
+
+    ipdb.set_trace()

@@ -133,7 +133,7 @@ class EquiformerV2Embedder(SimilarityMatcherBase):
 
         return np.linalg.norm(embeddings1 - embeddings2)
 
-    def is_equivalent(
+    def are_similar(
         self,
         structure1: Structure,
         structure2: Structure,
@@ -145,3 +145,26 @@ class EquiformerV2Embedder(SimilarityMatcherBase):
             return score < 0.01
         else:
             return score < threshold
+
+    def get_pairwise_equivalence(
+        self, structures: list[Structure], threshold: Optional[float] = None
+    ) -> np.ndarray:
+        """Returns a matrix of equivalence between structures.
+
+        Parameters
+        ----------
+        structures : list[Structure]
+            List of structures to compare.
+        threshold : float, optional
+            Threshold to determine similarity, by default None and the
+            algorithm's default threshold is used if it exists.
+
+        Returns
+        -------
+        np.ndarray
+            Matrix of equivalence between structures.
+        """
+        if threshold is None:
+            threshold = self.threshold
+
+        return self.get_pairwise_similarity_scores(structures) >= threshold

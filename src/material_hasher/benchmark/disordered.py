@@ -3,7 +3,7 @@ from typing import List, Dict
 from material_hasher.similarity.eqv2 import EquiformerV2Embedder
 from pymatgen.core import Structure
 
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 import tqdm
 
 import numpy as np
@@ -12,6 +12,71 @@ import pandas as pd
 from material_hasher.types import StructureEquivalenceChecker
 
 HF_DISORDERED_PATH = "LeMaterial/sqs_materials"
+
+
+def get_group_structures_from_data(
+    hf_data: Dataset, data_groupby: pd.DataFrame, group_column: str, no_unique: int = 2
+) -> Dict[str, List[Structure]]:
+    """Get the structures grouped by a column in the data.
+
+    Parameters
+    ----------
+    hf_data : Dataset
+        Hugging Face dataset containing the structures.
+    data_groupby : pd.DataFrame
+        Dataframe containing the column to group the structures by and ordered
+        the same way as the hf_data.
+    group_column : str
+        Column to group the structures by.
+    no_unique : int
+        Minimum number of unique structures to consider a group.
+
+    Returns
+    -------
+    groups_dict : dict
+        Dictionary containing the structures grouped by the column.
+    """
+
+    assert (
+        group_column in data_groupby.columns
+    ), f"Column {group_column} not found in data_groupby."
+
+    hf_data = hf_data.select_columns(
+        ["lattice_vectors", "species_at_sites", "cartesian_site_positions"]
+    )
+
+    groups = data_groupby.groupby(group_column).indices
+
+    groups = {k: v for k, v in groups.items() if len(v) > no_unique}
+
+    print(f"Found {len(groups)} groups with more than {no_unique} structures.")
+
+    hf_data = hf_data.select(np.concatenate(list(groups.values()))).to_pandas()
+
+    new_groups = {}
+    cumsum = 0
+    for group, indices in groups.items():
+        new_groups[group] = np.arange(cumsum, cumsum + len(indices))
+        cumsum += len(indices)
+
+    groups_dict = {}
+    for group, indices in (
+        pbar := tqdm.tqdm(new_groups.items(), desc="Loading groups")
+    ):
+        pbar.set_postfix_str(str(len(indices)))
+        group_rows = hf_data.loc[indices]
+        rows = [
+            Structure(
+                lattice=[x for y in row["lattice_vectors"] for x in y],
+                species=row["species_at_sites"],
+                coords=row["cartesian_site_positions"],
+                coords_are_cartesian=True,
+            )
+            for _, row in group_rows.iterrows()
+        ]
+        groups_dict[group] = rows
+
+    return groups_dict
 
 
 def download_disordered_structures(
@@ -30,24 +95,12 @@ def download_disordered_structures(
         Dictionary containing the structures grouped by chemical formula.
     """
 
-    dataset = load_dataset(hf_disordered_path, split="train").to_pandas()
+    hf_data = load_dataset(hf_disordered_path, split="train")
+    dataset = hf_data.to_pandas()
 
-    groups = dataset.groupby("chemical_formula_descriptive").indices
-    groups_dict = {group: dataset.loc[indices] for group, indices in groups.items()}
-
-    for group, group_rows in tqdm.tqdm(groups_dict.items(), desc="Downloading CIFs"):
-        rows = [
-            Structure(
-                lattice=[x for y in row["lattice_vectors"] for x in y],
-                species=row["species_at_sites"],
-                coords=row["cartesian_site_positions"],
-                coords_are_cartesian=True,
-            )
-            for _, row in group_rows.iterrows()
-        ]
-        groups_dict[group] = rows
-
-    return groups_dict
+    return get_group_structures_from_data(
+        hf_data, dataset, "chemical_formula_descriptive"
+    )
 
 
 def get_dissimilar_structures(
@@ -122,8 +175,6 @@ def benchmark_disordered_structures(
     print("Benchmarking disordered structures...")
     for group, structures in structures.items():
         print(f"\n\n-- Group: {group} --")
-        if len(structures) > 10:
-            continue
         pairwise_equivalence = hasher.get_pairwise_equivalence(structures)
         triu_indices = np.triu_indices(len(structures), k=1)
         equivalence = np.array(pairwise_equivalence)[triu_indices].astype(int)

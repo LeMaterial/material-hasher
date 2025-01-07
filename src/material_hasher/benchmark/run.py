@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import os
 
 from pymatgen.core import Structure
-from datasets import load_dataset, VerificationMode, concatenate_datasets
+from datasets import load_dataset, VerificationMode, concatenate_datasets, Dataset
 
 
 from material_hasher.benchmark.transformations import (
@@ -17,6 +17,42 @@ HASHERS = {
     "SimpleComposition": SimpleCompositionHasher,
     # "PDD": PDDMaterialsHasher,  # Ajout du PDD hasher
 }
+
+
+def get_hugging_face_dataset(token: Optional[str] = None) -> Dataset:
+    """
+    Only returns the dataset from Hugging Face where all the subsets are concatenated.
+
+    Parameters
+    ----------
+    token : str, optional
+        The authentication token required to access the dataset.
+        Optional if the dataset is public or you have already configured the Hugging Face CLI.
+
+    Returns
+    -------
+    Dataset
+        The concatenated dataset from Hugging Face.
+    """
+
+    subsets = [
+        "compatible_pbe",
+        "compatible_scan",
+        "compatible_pbesol",
+        "non_compatible",
+    ]
+    dss = []
+    for subset in subsets:
+        dss.append(
+            load_dataset(
+                "LeMaterial/LeMat-Bulk",
+                subset,
+                token=token,
+                verification_mode=VerificationMode.NO_CHECKS,
+            )["train"]
+        )
+    ds = concatenate_datasets(dss)
+    return ds
 
 
 def get_data_from_hugging_face(token: Optional[str] = None) -> list[Structure]:
@@ -49,26 +85,11 @@ def get_data_from_hugging_face(token: Optional[str] = None) -> list[Structure]:
     - Only the first entry of the dataset is selected for processing.
     - Errors during the transformation process are logged but do not halt execution.
     """
-    subsets = [
-        "compatible_pbe",
-        "compatible_scan",
-        "compatible_pbsol",
-        "non_compatible",
-    ]
-    dss = []
-    for subset in subsets:
-        dss.append(
-            load_dataset(
-                "LeMaterial/LeMat-Bulk",
-                subset,
-                token=token,
-                verification_mode=VerificationMode.NO_CHECKS,
-            )
-        )
-    ds = concatenate_datasets(dss)
+
+    ds = get_hugging_face_dataset(token)
 
     # Convert dataset to Pandas DataFrame
-    df = ds["train"]
+    df = ds
     print("Loaded dataset:", len(df))
     df = df.select(range(2))
 

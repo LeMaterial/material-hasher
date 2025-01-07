@@ -1,28 +1,25 @@
-from time import time
-from typing import Callable, Iterable, Optional
+from typing import Optional
 import matplotlib.pyplot as plt
 import os
 
 from pymatgen.core import Structure
-from datasets import load_dataset, VerificationMode
+from datasets import load_dataset, VerificationMode, concatenate_datasets
 
 
-from material_hasher.benchmark.test_cases import (
-    make_test_cases,
+from material_hasher.benchmark.transformations import (
     get_test_case,
 )
 from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
 from material_hasher.hasher.example import SimpleCompositionHasher
-from material_hasher.hasher.pdd import PDDMaterialsHasher
 
 HASHERS = {
     "Entalpic": EntalpicMaterialsHasher,
     "SimpleComposition": SimpleCompositionHasher,
-    #"PDD": PDDMaterialsHasher,  # Ajout du PDD hasher
+    # "PDD": PDDMaterialsHasher,  # Ajout du PDD hasher
 }
 
 
-def get_data_from_hugging_face(token: str):
+def get_data_from_hugging_face(token: Optional[str] = None) -> list[Structure]:
     """
     Downloads and processes structural data from the Hugging Face `datasets` library.
 
@@ -31,8 +28,9 @@ def get_data_from_hugging_face(token: str):
 
     Parameters
     ----------
-    token : str
+    token : str, optional
         The authentication token required to access the dataset.
+        Optional if the dataset is public or you have already configured the Hugging Face CLI.
 
     Returns
     -------
@@ -46,17 +44,29 @@ def get_data_from_hugging_face(token: str):
 
     Notes
     -----
-    - The dataset is fetched from the `LeMaterial/LeMat-Bulk` repository using the 
+    - The dataset is fetched from the `LeMaterial/LeMat-Bulk` repository using the
       `compatible_pbe` configuration.
     - Only the first entry of the dataset is selected for processing.
     - Errors during the transformation process are logged but do not halt execution.
     """
-    ds = load_dataset(
-        "LeMaterial/LeMat-Bulk",
+    subsets = [
         "compatible_pbe",
-        token=token,
-        verification_mode=VerificationMode.NO_CHECKS,
-    )
+        "compatible_scan",
+        "compatible_pbsol",
+        "non_compatible",
+    ]
+    dss = []
+    for subset in subsets:
+        dss.append(
+            load_dataset(
+                "LeMaterial/LeMat-Bulk",
+                subset,
+                token=token,
+                verification_mode=VerificationMode.NO_CHECKS,
+            )
+        )
+    ds = concatenate_datasets(dss)
+
     # Convert dataset to Pandas DataFrame
     df = ds["train"]
     print("Loaded dataset:", len(df))
@@ -81,9 +91,10 @@ def get_data_from_hugging_face(token: str):
 
     # Display the total number of successfully loaded structures
     print(f"structure_data size: {len(structure_data)}")
-    
+
     # Return the list of pymatgen Structure objects
     return structure_data
+
 
 def apply_transformation(
     structure: Structure,
@@ -138,7 +149,10 @@ def apply_transformation(
 
     return transformed_structures
 
-def hasher_sensitivity(structure: Structure, transformed_structures: list[Structure], hasher_name: str) -> float:
+
+def hasher_sensitivity(
+    structure: Structure, transformed_structures: list[Structure], hasher_name: str
+) -> float:
     """
     Computes the proportion of transformed structures with hashes equal to the original structure's hash.
 
@@ -163,7 +177,7 @@ def hasher_sensitivity(structure: Structure, transformed_structures: list[Struct
 
     # Compute hash for the original structure
     original_hash = hasher.get_material_hash(structure)
-    print('original hash:', original_hash)
+    print("original hash:", original_hash)
     # Compute hashes for transformed structures
     transformed_hashes = [hasher.get_material_hash(s) for s in transformed_structures]
 
@@ -172,7 +186,12 @@ def hasher_sensitivity(structure: Structure, transformed_structures: list[Struct
     return matching_hashes / len(transformed_structures)
 
 
-def mean_sensitivity(structure_data: list[Structure], test_case: str, parameter: tuple[str, any], hasher_name: str) -> float:
+def mean_sensitivity(
+    structure_data: list[Structure],
+    test_case: str,
+    parameter: tuple[str, any],
+    hasher_name: str,
+) -> float:
     """
     Computes the mean sensitivity for all structures in the dataset.
 
@@ -195,19 +214,21 @@ def mean_sensitivity(structure_data: list[Structure], test_case: str, parameter:
     sensitivities = []
 
     for structure in structure_data:
-        print('new material in process !')
+        print("new material in process !")
         # Apply transformation
         transformed_structures = apply_transformation(structure, test_case, parameter)
         # Compute sensitivity
         sensitivity = hasher_sensitivity(structure, transformed_structures, hasher_name)
-        print('sensitivity:', sensitivity)
+        print("sensitivity:", sensitivity)
         sensitivities.append(sensitivity)
 
     # Calculate and return mean sensitivity
     return sum(sensitivities) / len(sensitivities)
 
 
-def sensitivity_over_parameter_range(structure_data: list[Structure], test_case: str, hasher_name: str) -> dict[float, float]:
+def sensitivity_over_parameter_range(
+    structure_data: list[Structure], test_case: str, hasher_name: str
+) -> dict[float, float]:
     """
     Computes mean sensitivity for a range of parameter values from PARAMETERS.
 
@@ -228,25 +249,24 @@ def sensitivity_over_parameter_range(structure_data: list[Structure], test_case:
     # Load parameters from test cases
     _, params = get_test_case(test_case)
     param_name = list(params.keys())[0]  # Generalize to fetch the first parameter name
-    print('param_name:', param_name)
+    print("param_name:", param_name)
 
     param_range = params[param_name]
-    print('param_range:', param_range)
-
+    print("param_range:", param_range)
 
     results = {}
     for param_value in param_range:
         parameter = (param_name, param_value)
         mean_sens = mean_sensitivity(structure_data, test_case, parameter, hasher_name)
         results[param_value] = mean_sens
-        print('results', results)
-
-    
+        print("results", results)
 
     return results
 
 
-def benchmark_hasher(structure_data: list[Structure], test_case: str) -> dict[str, dict[float, float]]:
+def benchmark_hasher(
+    structure_data: list[Structure], test_case: str
+) -> dict[str, dict[float, float]]:
     """
     Benchmarks all hashers over parameter ranges.
 
@@ -264,10 +284,19 @@ def benchmark_hasher(structure_data: list[Structure], test_case: str) -> dict[st
     """
     results = {}
     for hasher_name in HASHERS.keys():
-        results[hasher_name] = sensitivity_over_parameter_range(structure_data, test_case, hasher_name)
+        results[hasher_name] = sensitivity_over_parameter_range(
+            structure_data, test_case, hasher_name
+        )
     return results
 
-def diagram_sensitivity(structure_data: list[Structure], test_case: str, dataset_name: str, noise_type: str, output_dir: str):
+
+def diagram_sensitivity(
+    structure_data: list[Structure],
+    test_case: str,
+    dataset_name: str,
+    noise_type: str,
+    output_dir: str,
+):
     """
     Generates and saves sensitivity diagrams for all hashers.
 
@@ -301,10 +330,11 @@ def diagram_sensitivity(structure_data: list[Structure], test_case: str, dataset
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
-    output_path = os.path.join(output_dir, f"{dataset_name}_{noise_type}_sensitivity_diagram.png")
+    output_path = os.path.join(
+        output_dir, f"{dataset_name}_{noise_type}_sensitivity_diagram.png"
+    )
     plt.savefig(output_path, dpi=600, bbox_inches="tight", format="png")
     plt.show()
-
 
 
 def main():

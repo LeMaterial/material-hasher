@@ -20,7 +20,7 @@ class PymatgenStructureSimilarity(SimilarityMatcherBase):
         self.matcher = StructureMatcher(ltol=tolerance)
         self.structures: List[Structure] = []
 
-    def are_similar(
+    def is_equivalent(
         self,
         structure1: Structure,
         structure2: Structure,

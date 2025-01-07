@@ -1,32 +1,31 @@
+import inspect
 import random
 from typing import Optional, Union
-import inspect 
-
 
 import numpy as np
 from pymatgen.core import Structure, SymmOp
 
 ALL_TEST_CASES = [
     "gaussian_noise",
-    #"isometric_strain",
-    #"strain",
-    #"translation",
-    #"symm_ops",
+    # "isometric_strain",
+    # "strain",
+    # "translation",
+    # "symm_ops",
 ]
 
 #    "gaussian_noise": {"sigma": np.arange(0, 0.31, 0.01).tolist()},
 
 PARAMETERS = {
     "gaussian_noise": {"sigma": [0.001, 0.003]},
-    #"isometric_strain": {"pct": [0.8, 1.0, 1.2]},
-    #"strain": {"sigma": [0.01, 0.1, 0.3]},
-    #"translation": {"sigma": [0.01, 0.1, 0.3]},
-    #"symm_ops": {},  # No additional parameters
+    # "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
+    # "strain": {"sigma": [0.01, 0.1, 0.3]},
+    # "translation": {"sigma": [0.01, 0.1, 0.3]},
+    # "symm_ops": {},  # No additional parameters
 }
 
 
 def get_new_structure_with_gaussian_noise(
-    structure: Structure, sigma: float 
+    structure: Structure, sigma: float
 ) -> Structure:
     """Returns new structure with gaussian noise on atomic positions
 
@@ -62,9 +61,7 @@ def get_new_structure_with_isometric_strain(
     return s.scale_lattice(structure.volume * pct)
 
 
-def get_new_structure_with_strain(
-    structure: Structure, sigma: float 
-) -> Structure:
+def get_new_structure_with_strain(structure: Structure, sigma: float) -> Structure:
     """_summary_
 
     Args:
@@ -78,9 +75,7 @@ def get_new_structure_with_strain(
     return s.apply_strain(np.random.normal(np.zeros(3), sigma))
 
 
-def get_new_structure_with_translation(
-    structure: Structure, sigma: float
-) -> Structure:
+def get_new_structure_with_translation(structure: Structure, sigma: float) -> Structure:
     """_summary_
 
     Args:
@@ -175,7 +170,6 @@ def make_test_cases(
         raise ValueError("No test cases to run.")
 
     return all_test_cases
-
 
 
 def get_test_case(test_case: str) -> tuple:

@@ -59,9 +59,12 @@ class EquiformerV2Embedder(SimilarityMatcherBase):
 
         self.calc = None
         self.features = {}
-        self.load_model()
+        self._load_model()
 
-    def load_model(self):
+    def _load_model(self):
+        """Load the model from the model path.
+        The calculator is then saved as an attribute of the class and a hook is added to the model to extract the sum of the normalized embeddings.
+        """
         if self.load_from_hf:
             try:
                 self.model_path = hf_hub_download(
@@ -89,9 +92,14 @@ class EquiformerV2Embedder(SimilarityMatcherBase):
         self.add_model_hook()
 
     def add_model_hook(self):
+        """Add a hook to the model to extract the sum of the normalized embeddings.
+        The hook is added to the last norm block of the Interaction part of the model.
+
+        Embeddings are stored in the features attribute of the class.
+        """
         assert self.calc is not None, "Model not loaded"
 
-        def hook_norm_block(m, input_embeddings, output_embeddings):
+        def hook_norm_block(m, input_embeddings, output_embeddings):  # noqa
             self.features["sum_norm_embeddings"] = (
                 output_embeddings.narrow(1, 0, 1)
                 .squeeze(1)
@@ -120,6 +128,18 @@ class EquiformerV2Embedder(SimilarityMatcherBase):
         return atoms
 
     def get_structure_embeddings(self, structure: Structure) -> np.ndarray:
+        """Get the embeddings of the structure.
+
+        Parameters
+        ----------
+        structure : Structure
+            Structure to get the embeddings of.
+
+        Returns
+        -------
+        np.ndarray
+            Embeddings of the structure.
+        """
         atoms = AseAtomsAdaptor.get_atoms(structure)
         atoms = self.relax_atoms(atoms)
 
@@ -128,17 +148,52 @@ class EquiformerV2Embedder(SimilarityMatcherBase):
     def get_similarity_score(
         self, structure1: Structure, structure2: Structure
     ) -> float:
+        """Get the similarity score between two structures.
+        Uses the cosine similarity between the embeddings of the structures.
+
+        Parameters
+        ----------
+        structure1 : Structure
+            First structure to compare.
+        structure2 : Structure
+            Second structure to compare.
+
+        Returns
+        -------
+        float
+            Similarity score between the two structures.
+        """
+
         embeddings1 = self.get_structure_embeddings(structure1)
         embeddings2 = self.get_structure_embeddings(structure2)
 
-        return np.linalg.norm(embeddings1 - embeddings2)
+        return np.dot(embeddings1, embeddings2) / (
+            np.linalg.norm(embeddings1) * np.linalg.norm(embeddings2)
+        )
 
-    def are_similar(
+    def is_equivalent(
         self,
         structure1: Structure,
         structure2: Structure,
         threshold: Optional[float] = None,
     ) -> bool:
+        """Returns True if the two structures are equivalent according to the
+        implemented algorithm.
+        Uses a threshold to determine equivalence if provided and the algorithm
+        does not have a built-in threshold.
+
+        Parameters
+        ----------
+        structure1 : Structure
+            First structure to compare.
+        structure2 : Structure
+            Second structure to compare.
+
+        Returns
+        -------
+        bool
+            True if the two structures are similar, False otherwise.
+        """
         score = self.get_similarity_score(structure1, structure2)
 
         if threshold is None:

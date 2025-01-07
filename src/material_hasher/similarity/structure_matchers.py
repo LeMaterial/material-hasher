@@ -1,10 +1,10 @@
 from typing import List, Optional
+import numpy as np
 
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.core.structure import Structure
 
-from material_hasher.similarity.base import SimilarityMatcherBase, HashingMatcherBase
-from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
+from material_hasher.similarity.base import SimilarityMatcherBase
 
 
 def shorten_hash(hash):
@@ -66,48 +66,36 @@ class PymatgenStructureSimilarity(SimilarityMatcherBase):
         """
         return self.matcher.get_rms_dist(structure1, structure2)
 
-
-class EntalpicStructureMatcher(HashingMatcherBase):
-    """Implementation of the StructureMatcherBase using the EntalpicmaterialHasher."""
-
-    def __init__(self, tolerance=0.01):
-        self.tolerance = tolerance
-        self.matcher = EntalpicMaterialsHasher()
-        self.structures: List[Structure] = []
-
-    def get_hash(self, structure: Structure) -> str:
-        return self.matcher.get_material_hash(structure)
-
-    def are_similar(
-        self,
-        structure1: Structure,
-        structure2: Structure,
-        threshold: Optional[float] = None,
-        get_shorten_hash: bool = False,
-    ) -> bool:
-        """
-        Check if two structures are similar based on the StructureMatcher of
-        pymatgen. The StructureMatcher uses a similarity algorithm based on the
-        maximum common subgraph isomorphism and the Jaccard index of the sites.
+    def get_pairwise_equivalence(
+        self, structures: list[Structure], threshold: Optional[float] = None
+    ) -> np.ndarray:
+        """Returns a matrix of equivalence between structures.
 
         Parameters
         ----------
-        structure1 : Structure
-            First structure to compare.
-        structure2 : Structure
-            Second structure to compare.
+        structures : list[Structure]
+            List of structures to compare.
+        threshold : float, optional
+            Threshold to determine similarity, by default None and the
+            algorithm's default threshold is used if it exists.
 
         Returns
         -------
-        bool
-            True if the two structures are similar, False otherwise.
+        np.ndarray
+            Matrix of equivalence between structures.
         """
 
-        hash_structure1 = self.get_hash(structure1)
-        hash_structure2 = self.get_hash(structure2)
+        n = len(structures)
+        matrix = np.zeros((n, n), dtype=bool)
 
-        if get_shorten_hash:
-            hash_structure1 = shorten_hash(hash_structure1)
-            hash_structure2 = shorten_hash(hash_structure2)
+        # Fill triu + diag
+        for i in range(n):
+            for j in range(i, n):
+                matrix[i, j] = self.is_equivalent(
+                    structures[i], structures[j], threshold
+                )
 
-        return hash_structure1 == hash_structure2
+        # Fill tril
+        matrix = matrix + matrix.T - np.diag(np.diag(matrix))
+
+        return matrix

@@ -14,10 +14,8 @@ from datasets import Dataset
 from typing import Tuple
 from collections import Counter
 
-from material_hasher.similarity.structure_matchers import (
-    PymatgenStructureSimilarity,
-    EntalpicStructureMatcher,
-)
+from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity
+from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
 
 
 def download_and_merge_github_datasets(dataset_name: str) -> DataFrame:
@@ -114,7 +112,7 @@ def compare_single_pair_of_structure(
     structure_1 = pymatgen_structures_dict[material_id_1]
     structure_2 = pymatgen_structures_dict[material_id_2]
 
-    matching = PymatgenStructureSimilarity().are_similar(structure_1, structure_2)
+    matching = PymatgenStructureSimilarity().is_equivalent(structure_1, structure_2)
     output_tuple = (material_id_1, material_id_2, matching)
 
     return output_tuple
@@ -210,7 +208,7 @@ def process_hash(couple_mat_id_structure: tuple, primitive: bool = False):
     mat_id, structure = couple_mat_id_structure[0], couple_mat_id_structure[1]
     crystal = Structure.from_str(structure, fmt="cif")
 
-    hash_result = EntalpicStructureMatcher().get_hash(crystal)
+    hash_result = EntalpicMaterialsHasher().get_material_hash(crystal)
 
     return {"material_id": mat_id, "hash": hash_result}
 
@@ -229,7 +227,7 @@ def process_all_hashes_and_save_csv(df: pd.DataFrame, output_dir: str) -> None:
     reduced_df = [(row["material_id"], row["cif"]) for _, row in df.iterrows()]
 
     workers = os.cpu_count() - 1
-    print(f"Processing the dataframe")
+    print("Processing the dataframe")
     with Pool(workers) as p:
         processed_results = p.map(process_hash, reduced_df)
 
@@ -450,7 +448,7 @@ def compute_hash_and_get_duplicates(df: DataFrame, hash_to_compare: str) -> None
 
     """
     df["hash_result"] = df.apply(
-        lambda row: EntalpicStructureMatcher().get_hash(
+        lambda row: EntalpicMaterialsHasher().get_material_hash(
             Structure.from_str(row["cif"], fmt="cif")
         ),
         axis=1,
@@ -477,7 +475,7 @@ def build_structure_and_compare(structure_to_compare: Structure, cif_file: str) 
         if the two structures are similar
     """
     structure = Structure.from_str(cif_file, fmt="cif")
-    return PymatgenStructureSimilarity().are_similar(structure, structure_to_compare)
+    return PymatgenStructureSimilarity().is_equivalent(structure, structure_to_compare)
 
 
 def get_number_of_duplicates_pymatgen(
@@ -675,16 +673,16 @@ def apply_noise_to_structures_and_compare(
                     initial_structure, std, noise_type
                 )
 
-                pymatgen_comparison = PymatgenStructureSimilarity().are_similar(
+                pymatgen_comparison = PymatgenStructureSimilarity().is_equivalent(
                     initial_structure, noisy_structure
                 )  # pymatgen comparison
                 rmsd = PymatgenStructureSimilarity().get_similarity_score(
                     initial_structure, noisy_structure
                 )  # rmsd comparison
-                hash_comparison = EntalpicStructureMatcher().are_similar(
+                hash_comparison = EntalpicMaterialsHasher().is_equivalent(
                     initial_structure, noisy_structure, get_shorten_hash=True
                 )  # short hash comparison
-                full_hash_comparison = EntalpicStructureMatcher().are_similar(
+                full_hash_comparison = EntalpicMaterialsHasher().is_equivalent(
                     initial_structure, noisy_structure
                 )  # full hash comparison
 
@@ -785,13 +783,13 @@ def get_equality_on_trajectory(
             coords=on_traj_row["positions"],
         )
 
-        pymatgen_equality = PymatgenStructureSimilarity().are_similar(
+        pymatgen_equality = PymatgenStructureSimilarity().is_equivalent(
             final_structure, on_traj_structure
         )
-        hash_equality = EntalpicStructureMatcher().are_similar(
+        hash_equality = EntalpicMaterialsHasher().is_equivalent(
             final_structure, on_traj_structure, get_shorten_hash=True
         )
-        full_hash_equality = EntalpicStructureMatcher().are_similar(
+        full_hash_equality = EntalpicMaterialsHasher().is_equivalent(
             final_structure, on_traj_structure, get_shorten_hash=True
         )
 

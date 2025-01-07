@@ -5,7 +5,7 @@ from pymatgen.core import Structure
 
 
 class StructureEquivalenceChecker(Protocol):
-    def are_similar(
+    def is_equivalent(
         self,
         structure1: Structure,
         structure2: Structure,

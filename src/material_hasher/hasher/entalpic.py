@@ -3,9 +3,12 @@ from pymatgen.analysis.local_env import EconNN, NearNeighbors
 from material_hasher.hasher.utils.graph import get_weisfeiler_lehman_hash
 from material_hasher.hasher.utils.graph_structure import get_structure_graph
 from material_hasher.hasher.utils.symmetry import AFLOWSymmetry, SPGLibSymmetry
+from pymatgen.core.structure import Structure
+
+from material_hasher.hasher.base import HasherBase
 
 
-class EntalpicMaterialsHasher:
+class EntalpicMaterialsHasher(HasherBase):
     def __init__(
         self,
         graphing_algorithm: str = "WL",
@@ -45,6 +48,52 @@ class EntalpicMaterialsHasher:
             data["composition"] = structure.composition.formula.replace(" ", "")
         return data
 
-    def get_material_hash(self, structure):
+    def get_material_hash(self, structure: Structure) -> str:
+        """Returns a hash of the structure.
+
+        Parameters
+        ----------
+        structure : Structure
+            Structure to hash.
+
+        Returns
+        -------
+        str
+            Hash of the structure.
+        """
         data = self.get_entalpic_materials_data(structure)
         return "_".join([str(v) for k, v in data.items()])
+
+    def is_equivalent(
+        self,
+        structure1: Structure,
+        structure2: Structure,
+        threshold: Optional[float] = None,
+        get_shorten_hash: bool = False,
+    ) -> bool:
+        """
+        Check if two structures are similar based on the StructureMatcher of
+        pymatgen. The StructureMatcher uses a similarity algorithm based on the
+        maximum common subgraph isomorphism and the Jaccard index of the sites.
+
+        Parameters
+        ----------
+        structure1 : Structure
+            First structure to compare.
+        structure2 : Structure
+            Second structure to compare.
+
+        Returns
+        -------
+        bool
+            True if the two structures are similar, False otherwise.
+        """
+
+        hash_structure1 = self.get_material_hash(structure1)
+        hash_structure2 = self.get_material_hash(structure2)
+
+        if get_shorten_hash:
+            hash_structure1 = shorten_hash(hash_structure1)
+            hash_structure2 = shorten_hash(hash_structure2)
+
+        return hash_structure1 == hash_structure2

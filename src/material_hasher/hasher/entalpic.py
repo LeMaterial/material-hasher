@@ -22,12 +22,14 @@ class EntalpicMaterialsHasher(HasherBase):
         bonding_kwargs: dict = {"tol": 0.2, "cutoff": 10, "use_fictive_radius": True},
         include_composition: bool = True,
         symmetry_labeling: str = "SPGLib",
+        shorten_hash: bool = False,
     ):
         self.graphing_algorithm = graphing_algorithm
         self.bonding_algorithm = bonding_algorithm
         self.bonding_kwargs = bonding_kwargs
         self.include_composition = include_composition
         self.symmetry_labeling = symmetry_labeling
+        self.shorten_hash = shorten_hash
 
     def get_entalpic_materials_data(self, structure):
         data = dict()
@@ -75,7 +77,6 @@ class EntalpicMaterialsHasher(HasherBase):
         structure1: Structure,
         structure2: Structure,
         threshold: Optional[float] = None,
-        get_shorten_hash: bool = False,
     ) -> bool:
         """
         Check if two structures are similar based on the StructureMatcher of
@@ -98,7 +99,7 @@ class EntalpicMaterialsHasher(HasherBase):
         hash_structure1 = self.get_material_hash(structure1)
         hash_structure2 = self.get_material_hash(structure2)
 
-        if get_shorten_hash:
+        if self.shorten_hash:
             hash_structure1 = shorten_hash(hash_structure1)
             hash_structure2 = shorten_hash(hash_structure2)
 

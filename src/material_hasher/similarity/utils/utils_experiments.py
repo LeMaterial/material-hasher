@@ -260,7 +260,7 @@ def get_duplicates_from_hash(
     ----------
     path_to_dataset_hash : str
         The path to the dataset with the pre-processed hashes
-    get_shorten_hash : bool, optional
+    get_shortened_hash : bool, optional
         whether to shorten the hash, by default True
 
     Returns
@@ -679,10 +679,14 @@ def apply_noise_to_structures_and_compare(
                 rmsd = PymatgenStructureSimilarity().get_similarity_score(
                     initial_structure, noisy_structure
                 )  # rmsd comparison
-                hash_comparison = EntalpicMaterialsHasher().is_equivalent(
-                    initial_structure, noisy_structure, get_shorten_hash=True
+                hash_comparison = EntalpicMaterialsHasher(
+                    shorten_hash=True
+                ).is_equivalent(
+                    initial_structure, noisy_structure
                 )  # short hash comparison
-                full_hash_comparison = EntalpicMaterialsHasher().is_equivalent(
+                full_hash_comparison = EntalpicMaterialsHasher(
+                    shorten_hash=False
+                ).is_equivalent(
                     initial_structure, noisy_structure
                 )  # full hash comparison
 
@@ -786,11 +790,11 @@ def get_equality_on_trajectory(
         pymatgen_equality = PymatgenStructureSimilarity().is_equivalent(
             final_structure, on_traj_structure
         )
-        hash_equality = EntalpicMaterialsHasher().is_equivalent(
-            final_structure, on_traj_structure, get_shorten_hash=True
+        hash_equality = EntalpicMaterialsHasher(shorten_hash=True).is_equivalent(
+            final_structure, on_traj_structure
         )
-        full_hash_equality = EntalpicMaterialsHasher().is_equivalent(
-            final_structure, on_traj_structure, get_shorten_hash=True
+        full_hash_equality = EntalpicMaterialsHasher(shorten_hash=False).is_equivalent(
+            final_structure, on_traj_structure
         )
 
         pymatgen_equality_list.append(pymatgen_equality)

@@ -91,6 +91,8 @@ class PymatgenStructureSimilarity(SimilarityMatcherBase):
                 )
 
         # Fill tril
-        matrix = matrix + matrix.T - np.diag(np.diag(matrix))
+        matrix = matrix.astype(int)
+        matrix = matrix + matrix.T - np.diag(np.diag(matrix))  # probably just an or
+        matrix = matrix.astype(bool)
 
         return matrix

@@ -1,4 +1,8 @@
 from collections import defaultdict
+import datetime
+from pathlib import Path
+import yaml
+import os
 import tqdm
 
 from typing import Tuple
@@ -59,6 +63,7 @@ def benchmark_disordered_structures(
         results[group] = metrics
         print(f"Success rate: {(metrics['recall'] * 100):.2f}%")
     total_time = time.time() - start_time
+    results["total_time"] = {"time": total_time}
 
     df_results = pd.DataFrame(results).T
     print(df_results)
@@ -88,7 +93,26 @@ def main():
         choices=list(STRUCTURE_CHECKERS.keys()) + ["all"],
         help=f"The name of the structure checker to benchmark. One of: {list(STRUCTURE_CHECKERS.keys()) + ['all']}",
     )
+    parser.add_argument(
+        "--output-path",
+        type=str,
+        help="Output path for the results. Default: 'results/'",
+        default="results/",
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="Name of the .yaml configuration file to use for the hyperparameters of the hasher. Defaults to default.yaml",
+        default="default.yaml",
+    )
     args = parser.parse_args()
+
+    config = yaml.safe_load(open(Path("configs") / args.config, "r"))
+    output_path = Path(args.output_path) / datetime.datetime.now().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+    os.makedirs(output_path, exist_ok=True)
+    yaml.dump(config, open(output_path / "config.yaml", "w"))
 
     if args.algorithm not in STRUCTURE_CHECKERS and args.algorithm != "all":
         raise ValueError(
@@ -99,9 +123,16 @@ def main():
         if args.algorithm != "all" and structure_checker_name != args.algorithm:
             continue
 
-        structure_checker = structure_checker_class()
-        df_results = benchmark_disordered_structures(structure_checker)
-        # print(f"{hasher_name}: {hasher_time:.3f} s")
+        structure_checker = structure_checker_class(
+            **config.get(structure_checker_name, {})
+        )
+        df_results, structure_checker_time = benchmark_disordered_structures(
+            structure_checker
+        )
+        df_results.to_csv(
+            output_path / f"{structure_checker_name}_results_disordered.csv"
+        )
+        print(f"{structure_checker_name}: {structure_checker_time:.3f} s")
 
 
 if __name__ == "__main__":

@@ -136,7 +136,7 @@ def get_dissimilar_structures(
 
 def get_classification_results(equivalence: np.ndarray) -> dict:
     """Get classification metrics from the pairwise equivalence matrix.
-    Since all samples are labeled similar in this case, only the recall is interesting
+    Since all samples are labeled similar in this case, only the success rate is interesting
 
     Parameters
     ----------
@@ -151,8 +151,8 @@ def get_classification_results(equivalence: np.ndarray) -> dict:
 
     TP = np.sum(equivalence)
     FN = np.sum(equivalence == 0)
-    recall = TP / (TP + FN)
-    metrics = {"recall": recall}
+    success_rate = TP / (TP + FN)
+    metrics = {"success_rate": success_rate}
     return metrics
 
 
@@ -161,7 +161,7 @@ def get_classification_results_dissimilar(
     structure_checker: StructureEquivalenceChecker,
 ) -> Dict[str, float]:
     """Get classification metrics from the dissimilar structures.
-    Only the recall is interesting in this case because all samples are labeled dissimilar (so positive in this case).
+    Only the success rate is interesting in this case because all samples are labeled dissimilar (so positive in this case).
 
     Parameters
     ----------
@@ -184,5 +184,5 @@ def get_classification_results_dissimilar(
         )  # The structures are not equivalent, so the prediction is correct
         FN += int(is_equivalent)
 
-    recall = TP / (TP + FN)
-    return {"recall": recall}
+    success_rate = TP / (TP + FN)
+    return {"success_rate": success_rate}

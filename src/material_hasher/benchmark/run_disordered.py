@@ -51,17 +51,22 @@ def benchmark_disordered_structures(
         dissimilar_structures, structure_checker
     )
     results["dissimilar_case"] = dissimilar_metrics
-    print(f"Success rate: {(dissimilar_metrics['recall'] * 100):.2f}%")
+    print(f"Success rate: {(dissimilar_metrics['success_rate'] * 100):.2f}%")
 
     print("Benchmarking disordered structures...")
     for group, structures in tqdm.tqdm(structures.items()):
+        if len(structures) > 30:
+            print(
+                f"Group {group} has {len(structures)} structures. Taking the first 30."
+            )
+            structures = structures[:30]
         print(f"\n\n-- Group: {group} with {len(structures)} structures --")
         pairwise_equivalence = structure_checker.get_pairwise_equivalence(structures)
         triu_indices = np.triu_indices(len(structures), k=1)
         equivalence = np.array(pairwise_equivalence)[triu_indices].astype(int)
         metrics = get_classification_results(equivalence)
         results[group] = metrics
-        print(f"Success rate: {(metrics['recall'] * 100):.2f}%")
+        print(f"Success rate: {(metrics['success_rate'] * 100):.2f}%")
     total_time = time.time() - start_time
     results["total_time"] = {"time": total_time}
 

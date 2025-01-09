@@ -85,7 +85,7 @@ def get_data_from_hugging_face(token: Optional[str] = None) -> list[Structure]:
     # Convert dataset to Pandas DataFrame
     df = ds
     print("Loaded dataset:", len(df))
-    df = df.select(range(2))
+    df = df.select(range(1000))
 
     # Transform dataset int pymatgen Structure objects
     structure_data = []
@@ -187,12 +187,13 @@ def hasher_sensitivity(
 
     # Compute hash for the original structure
     original_hash = hasher.get_material_hash(structure)
-    print("original hash:", original_hash)
+    print("original structure hash:", original_hash)
     # Compute hashes for transformed structures
     transformed_hashes = [hasher.get_material_hash(s) for s in transformed_structures]
 
     # Calculate the proportion of hashes matching the original hash
     matching_hashes = sum(1 for h in transformed_hashes if h == original_hash)
+
     return matching_hashes / len(transformed_structures)
 
 
@@ -229,7 +230,7 @@ def mean_sensitivity(
         transformed_structures = apply_transformation(structure, test_case, parameter)
         # Compute sensitivity
         sensitivity = hasher_sensitivity(structure, transformed_structures, hasher_name)
-        print("sensitivity:", sensitivity)
+        print(f"sensitivity to its {len(transformed_structures)} tranformed structures:", sensitivity)
         sensitivities.append(sensitivity)
 
     # Calculate and return mean sensitivity

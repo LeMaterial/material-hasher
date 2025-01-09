@@ -3,8 +3,8 @@ from datasets import load_dataset, VerificationMode
 
 
 
-from material_hasher.benchmark.run import HASHERS, get_data_from_hugging_face, diagram_sensitivity
-from material_hasher.benchmark.test_cases import ALL_TEST_CASES, get_test_case
+from material_hasher.benchmark.run_transformations import HASHERS, get_data_from_hugging_face, diagram_sensitivity
+from material_hasher.benchmark.transformations import ALL_TEST_CASES, get_test_case
 
 
 
@@ -16,11 +16,9 @@ class TestBenchmark_HG:
         hg_structures = get_data_from_hugging_face("token")
         diagram_sensitivity(hg_structures, "gaussian_noise", "TestDataset", "coordinates", "./output")
 
+    def recup_mat(self):
+        return get_data_from_hugging_face("token")
 
-
-        
-
-    
 
 """
 class TestBenchmark:

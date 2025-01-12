@@ -1,14 +1,13 @@
-from typing import List, Dict
-from material_hasher.types import StructureEquivalenceChecker
-from pymatgen.core import Structure
-from material_hasher.benchmark.utils import get_structure_from_dict
-
-from datasets import load_dataset, Dataset
-import tqdm
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+import tqdm
+from datasets import Dataset, load_dataset
+from pymatgen.core import Structure
 
+from material_hasher.benchmark.utils import get_structure_from_dict
+from material_hasher.types import StructureEquivalenceChecker
 
 HF_DISORDERED_PATH = "LeMaterial/sqs_materials"
 

@@ -1,21 +1,21 @@
-from collections import defaultdict
 import datetime
-from pathlib import Path
-import yaml
 import os
-import tqdm
-
-from typing import Tuple, List, Dict
 import time
+from collections import defaultdict
+from pathlib import Path
+from typing import Dict, List, Tuple
+
 import numpy as np
 import pandas as pd
+import tqdm
+import yaml
 from pymatgen.core import Structure
 
 from material_hasher.benchmark.disordered import (
     download_disordered_structures,
-    get_group_structure_results,
-    get_dissimilar_structures,
     get_classification_results_dissimilar,
+    get_dissimilar_structures,
+    get_group_structure_results,
 )
 from material_hasher.hasher import HASHERS
 from material_hasher.similarity import SIMILARITY_MATCHERS

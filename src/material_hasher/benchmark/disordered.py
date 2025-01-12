@@ -114,7 +114,7 @@ def get_dissimilar_structures(
     """
     from itertools import combinations
 
-    n_picked_per_pair = 10
+    n_picked_per_pair = 40
     np.random.seed(seed)
     dissimilar_structures = []
 
@@ -134,6 +134,33 @@ def get_dissimilar_structures(
     return dissimilar_structures
 
 
+def get_group_structure_results(
+    structure_checker: StructureEquivalenceChecker, structures: List[Structure]
+) -> dict:
+    """Get classification metrics from a list of structures.
+    This function computes the pairwise equivalence matrix and then the classification metrics.
+
+    Parameters
+    ----------
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker.
+    structures : List[Structure]
+        List of structures to compute pairwise equivalence on.
+
+    Returns
+    -------
+    metrics : dict
+        Dictionary containing the classification metrics.
+    """
+
+    pairwise_equivalence = structure_checker.get_pairwise_equivalence(structures)
+    # we only need the upper triangular part of the matrix
+    triu_indices = np.triu_indices(len(structures), k=1)
+    equivalence = np.array(pairwise_equivalence)[triu_indices].astype(int)
+    metrics = get_classification_results(equivalence)
+    return metrics
+
+
 def get_classification_results(equivalence: np.ndarray) -> dict:
     """Get classification metrics from the pairwise equivalence matrix.
     Since all samples are labeled similar in this case, only the success rate is interesting
@@ -148,7 +175,6 @@ def get_classification_results(equivalence: np.ndarray) -> dict:
     metrics : dict
         Dictionary containing the classification metrics.
     """
-
     TP = np.sum(equivalence)
     FN = np.sum(equivalence == 0)
     success_rate = TP / (TP + FN)
@@ -156,33 +182,85 @@ def get_classification_results(equivalence: np.ndarray) -> dict:
     return metrics
 
 
-def get_classification_results_dissimilar(
-    dissimilar_structures: List[Structure],
+def run_group_structures_benchmark(
     structure_checker: StructureEquivalenceChecker,
-) -> Dict[str, float]:
-    """Get classification metrics from the dissimilar structures.
+    group: str,
+    structures: List[Structure],
+    n_pick_random: int = 30,
+    n_random_structures: int = 30,
+    seeds: List[int] = [0, 1, 2, 3, 4],
+) -> Dict[str, List[float]]:
+    """Run the benchmark for a group of structures.
+    If the group has more than n_pick_random structures, pick n_random_structures random structures for all seed in seeds.
+    Otherwise, pick all the structures and there is only one success rate.
+
+    Parameters
+    ----------
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker.
+    group : str
+        Group name.
+    structures : List[Structure]
+        List of structures in the group.
+    n_pick_random : int
+        Number of structures to pick randomly.
+    n_random_structures : int
+        Number of random structures to pick.
+    seeds : List[int]
+        Seeds for the random number generator.
+    """
+    if len(structures) > n_pick_random:
+        print(
+            f"Group {group} has {len(structures)} structures. Taking {min(n_random_structures, len(structures))} random for seeds {seeds}"
+        )
+        metrics = {"success_rate": []}
+        for seed in seeds:
+            np.random.seed(seed)
+            np.random.shuffle(structures)
+            structures_seed = structures[: min(n_random_structures, len(structures))]
+            metrics_seed = get_group_structure_results(
+                structure_checker, structures_seed
+            )
+            metrics["success_rate"].append(metrics_seed["success_rate"])
+    else:
+        print(f"\n\n-- Group: {group} with {len(structures)} structures --")
+        metrics = get_group_structure_results(structure_checker, structures)
+        metrics["success_rate"] = [metrics["success_rate"]]
+    return metrics
+
+
+def get_classification_results_dissimilar(
+    dissimilar_structures: List[List[Structure]],
+    structure_checker: StructureEquivalenceChecker,
+) -> Dict[str, List[float]]:
+    """Get classification metrics from the dissimilar structures. Takes a list of lists of dissimilar structures for each seed.
     Only the success rate is interesting in this case because all samples are labeled dissimilar (so positive in this case).
 
     Parameters
     ----------
-    dissimilar_structures : List[Structure]
-        List of dissimilar structures.
+    dissimilar_structures : List[List[Structure]]
+        List of dissimilar structures for each seed.
     structure_checker : StructureEquivalenceChecker
         Structure equivalence checker.
 
     Returns
     -------
-    metrics : Dict[str, float]
-        Dictionary containing the classification metrics.
+    metrics : Dict[str, List[float]]
+        Dictionary containing the classification metrics as a list of success rates for each seed.
     """
-    TP = 0
-    FN = 0
-    for structure1, structure2 in tqdm.tqdm(dissimilar_structures, desc="Dissimilar"):
-        is_equivalent = structure_checker.is_equivalent(structure1, structure2)
-        TP += int(
-            not is_equivalent
-        )  # The structures are not equivalent, so the prediction is correct
-        FN += int(is_equivalent)
+    success_rates = []
+    for dissimilar_structures_seed in tqdm.tqdm(
+        dissimilar_structures, desc="Dissimilar"
+    ):
+        TP = 0
+        FN = 0
+        for structure1, structure2 in dissimilar_structures_seed:
+            is_equivalent = structure_checker.is_equivalent(structure1, structure2)
+            TP += int(
+                not is_equivalent
+            )  # The structures are not equivalent, so the prediction is correct
+            FN += int(is_equivalent)
 
-    success_rate = TP / (TP + FN)
-    return {"success_rate": success_rate}
+        success_rate = TP / (TP + FN)
+        success_rates.append(success_rate)
+    return {"success_rate": success_rates}

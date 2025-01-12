@@ -1,13 +1,12 @@
 from pymatgen.core import Structure
-from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
-from amd import PDD, PeriodicSet, periodicset_from_gemmi_block, ParseError
-from collections import Counter
+from amd import PDD, PeriodicSet
 import numpy as np
 from typing import Optional
 
 
 from hashlib import sha256
 from material_hasher.hasher.base import HasherBase
+
 
 class PointwiseDistanceDistributionHasher(HasherBase):
     def __init__(self, cutoff: float = 100.0):
@@ -19,9 +18,7 @@ class PointwiseDistanceDistributionHasher(HasherBase):
         """
         self.cutoff = int(cutoff)  # Ensure cutoff is an integer
 
-    def periodicset_from_structure(
-            self, structure: Structure
-    ) -> PeriodicSet:
+    def periodicset_from_structure(self, structure: Structure) -> PeriodicSet:
         """Convert a pymatgen Structure object to a PeriodicSet.
 
         Parameters
@@ -50,12 +47,12 @@ class PointwiseDistanceDistributionHasher(HasherBase):
 
         # Check if the resulting motif is valid
         if len(coords) == 0:
-            raise ValueError('The structure has no valid sites after filtering.')
+            raise ValueError("The structure has no valid sites after filtering.")
 
         # Map coordinates to the unit cell (fractional positions mod 1)
         frac_coords = np.mod(structure.lattice.get_fractional_coords(coords), 1)
 
-        motif=frac_coords
+        motif = frac_coords
 
         return PeriodicSet(
             motif=motif,
@@ -80,11 +77,13 @@ class PointwiseDistanceDistributionHasher(HasherBase):
         """
         periodic_set = self.periodicset_from_structure(structure)
 
-        pdd = PDD(periodic_set, int(self.cutoff), collapse=False)  # Ensure cutoff is an integer, without collapsing similar rows
-        
+        pdd = PDD(
+            periodic_set, int(self.cutoff), collapse=False
+        )  # Ensure cutoff is an integer, without collapsing similar rows
+
         # Round the PDD values to 4 decimal places for numerical stability and consistency.
         pdd = np.round(pdd, decimals=4)
-        #print(f"PDD shape: {pdd.shape}")
+        # print(f"PDD shape: {pdd.shape}")
 
         # PDD hash array to PDD hash string
         string_pdd = pdd.tobytes()
@@ -118,9 +117,5 @@ class PointwiseDistanceDistributionHasher(HasherBase):
 
         hash_structure1 = self.get_material_hash(structure1)
         hash_structure2 = self.get_material_hash(structure2)
-
-        if self.shorten_hash:
-            hash_structure1 = shorten_hash(hash_structure1)
-            hash_structure2 = shorten_hash(hash_structure2)
 
         return hash_structure1 == hash_structure2

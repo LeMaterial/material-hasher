@@ -182,53 +182,6 @@ def get_classification_results(equivalence: np.ndarray) -> dict:
     return metrics
 
 
-def run_group_structures_benchmark(
-    structure_checker: StructureEquivalenceChecker,
-    group: str,
-    structures: List[Structure],
-    n_pick_random: int = 30,
-    n_random_structures: int = 30,
-    seeds: List[int] = [0, 1, 2, 3, 4],
-) -> Dict[str, List[float]]:
-    """Run the benchmark for a group of structures.
-    If the group has more than n_pick_random structures, pick n_random_structures random structures for all seed in seeds.
-    Otherwise, pick all the structures and there is only one success rate.
-
-    Parameters
-    ----------
-    structure_checker : StructureEquivalenceChecker
-        Structure equivalence checker.
-    group : str
-        Group name.
-    structures : List[Structure]
-        List of structures in the group.
-    n_pick_random : int
-        Number of structures to pick randomly.
-    n_random_structures : int
-        Number of random structures to pick.
-    seeds : List[int]
-        Seeds for the random number generator.
-    """
-    if len(structures) > n_pick_random:
-        print(
-            f"Group {group} has {len(structures)} structures. Taking {min(n_random_structures, len(structures))} random for seeds {seeds}"
-        )
-        metrics = {"success_rate": []}
-        for seed in seeds:
-            np.random.seed(seed)
-            np.random.shuffle(structures)
-            structures_seed = structures[: min(n_random_structures, len(structures))]
-            metrics_seed = get_group_structure_results(
-                structure_checker, structures_seed
-            )
-            metrics["success_rate"].append(metrics_seed["success_rate"])
-    else:
-        print(f"\n\n-- Group: {group} with {len(structures)} structures --")
-        metrics = get_group_structure_results(structure_checker, structures)
-        metrics["success_rate"] = [metrics["success_rate"]]
-    return metrics
-
-
 def get_classification_results_dissimilar(
     dissimilar_structures: List[List[Structure]],
     structure_checker: StructureEquivalenceChecker,

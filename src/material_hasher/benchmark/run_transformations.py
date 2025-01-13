@@ -1,7 +1,7 @@
 from typing import Optional
 import matplotlib.pyplot as plt
 import os
-
+import pandas as pd
 from pymatgen.core import Structure
 from datasets import load_dataset, VerificationMode, concatenate_datasets, Dataset
 
@@ -31,7 +31,7 @@ def get_hugging_face_dataset(token: Optional[str] = None) -> Dataset:
 
     subsets = [
         "compatible_pbe",
-        "compatible_scan",
+        "compatible_scan",        
         "compatible_pbesol",
         "non_compatible",
     ]
@@ -85,7 +85,7 @@ def get_data_from_hugging_face(token: Optional[str] = None) -> list[Structure]:
     # Convert dataset to Pandas DataFrame
     df = ds
     print("Loaded dataset:", len(df))
-    df = df.select(range(1000))
+    df = df.select(range(10))
 
     # Transform dataset int pymatgen Structure objects
     structure_data = []
@@ -153,7 +153,7 @@ def apply_transformation(
     kwargs = {param_name: param_value}
 
     # Apply the transformation and add the transformed structures
-    for _ in range(100):
+    for _ in range(2):
         transformed_structure = func(structure, **kwargs)
         transformed_structures.append(transformed_structure)
 
@@ -325,6 +325,7 @@ def diagram_sensitivity(
         Directory to save the output plot.
     """
     results = benchmark_hasher(structure_data, test_case)
+    print('final dict results :: ', results)
 
     plt.figure(figsize=(10, 6))
     for hasher_name, data in results.items():
@@ -341,12 +342,25 @@ def diagram_sensitivity(
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
-    output_path = os.path.join(
+    output_path_figure = os.path.join(
         output_dir, f"{dataset_name}_{noise_type}_sensitivity_diagram.png"
     )
-    plt.savefig(output_path, dpi=600, bbox_inches="tight", format="png")
-    plt.show()
 
+    plt.savefig(output_path_figure, dpi=600, bbox_inches="tight", format="png")
+  
+
+
+    # Convert results to DataFrame and save as CSV
+    df = pd.DataFrame(results)
+    output_path_csv = os.path.join(
+        output_dir, f"{dataset_name}_{noise_type}_sensitivity_results.csv"
+    )
+    df.to_csv(output_path_csv, index=True)
+
+    print(f"Figure saved to: {output_path_figure}")
+    print(f"Results saved to: {output_path_csv}")
+
+    plt.show()
 
 def main():
     """

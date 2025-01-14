@@ -1,9 +1,7 @@
 import datetime
 import json
 import os
-<<<<<<< HEAD
 import pandas as pd
-=======
 import time
 from pathlib import Path
 from typing import Optional
@@ -12,7 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from datasets import Dataset, VerificationMode, concatenate_datasets, load_dataset
->>>>>>> bb0e7a1d5479deb6beb98dd74de83cdc9264be85
 from pymatgen.core import Structure
 
 from material_hasher.benchmark.transformations import (
@@ -103,13 +100,9 @@ def get_data_from_hugging_face(
     # Convert dataset to Pandas DataFrame
     df = ds
     print("Loaded dataset:", len(df))
-<<<<<<< HEAD
-    df = df.select(range(10))
-=======
     np.random.seed(seed)
-    range_select = np.random.choice(len(df), 1, replace=False)
+    range_select = np.random.choice(len(df), 100, replace=False)
     df = df.select(range_select)
->>>>>>> bb0e7a1d5479deb6beb98dd74de83cdc9264be85
 
     # Transform dataset int pymatgen Structure objects
     structure_data = []
@@ -385,19 +378,16 @@ def diagram_sensitivity(
     output_dir : str
         Directory to save the output plot.
     """
-<<<<<<< HEAD
-    results = benchmark_hasher(structure_data, test_case)
-    print('final dict results :: ', results)
-=======
 
     results = {}
     for hasher_key, hasher in HASHERS.items():
         hasher = hasher()
-        results_hasher, _ = benchmark_transformations(
+        results_hasher= benchmark_transformations(
             hasher, structure_data, test_case
-        )[test_case]
+        )[0][test_case]
         results[hasher_key] = results_hasher
->>>>>>> bb0e7a1d5479deb6beb98dd74de83cdc9264be85
+    
+    print('final dict results : ', results)
 
     plt.figure(figsize=(10, 6))
     for hasher_name, data in results.items():

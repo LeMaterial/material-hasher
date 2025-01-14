@@ -1,16 +1,32 @@
-from typing import Optional
-import matplotlib.pyplot as plt
+import datetime
+import json
 import os
+<<<<<<< HEAD
 import pandas as pd
-from pymatgen.core import Structure
-from datasets import load_dataset, VerificationMode, concatenate_datasets, Dataset
+=======
+import time
+from pathlib import Path
+from typing import Optional
 
+import matplotlib.pyplot as plt
+import numpy as np
+import yaml
+from datasets import Dataset, VerificationMode, concatenate_datasets, load_dataset
+>>>>>>> bb0e7a1d5479deb6beb98dd74de83cdc9264be85
+from pymatgen.core import Structure
 
 from material_hasher.benchmark.transformations import (
+    ALL_TEST_CASES,
     get_test_case,
 )
 from material_hasher.benchmark.utils import get_structure_from_dict
 from material_hasher.hasher import HASHERS
+from material_hasher.hasher.base import HasherBase
+from material_hasher.similarity import SIMILARITY_MATCHERS
+from material_hasher.similarity.base import SimilarityMatcherBase
+from material_hasher.types import StructureEquivalenceChecker
+
+STRUCTURE_CHECKERS = {**HASHERS, **SIMILARITY_MATCHERS}
 
 
 def get_hugging_face_dataset(token: Optional[str] = None) -> Dataset:
@@ -49,7 +65,9 @@ def get_hugging_face_dataset(token: Optional[str] = None) -> Dataset:
     return ds
 
 
-def get_data_from_hugging_face(token: Optional[str] = None) -> list[Structure]:
+def get_data_from_hugging_face(
+    token: Optional[str] = None, seed: int = 0
+) -> list[Structure]:
     """
     Downloads and processes structural data from the Hugging Face `datasets` library.
 
@@ -85,7 +103,13 @@ def get_data_from_hugging_face(token: Optional[str] = None) -> list[Structure]:
     # Convert dataset to Pandas DataFrame
     df = ds
     print("Loaded dataset:", len(df))
+<<<<<<< HEAD
     df = df.select(range(10))
+=======
+    np.random.seed(seed)
+    range_select = np.random.choice(len(df), 1, replace=False)
+    df = df.select(range_select)
+>>>>>>> bb0e7a1d5479deb6beb98dd74de83cdc9264be85
 
     # Transform dataset int pymatgen Structure objects
     structure_data = []
@@ -161,7 +185,9 @@ def apply_transformation(
 
 
 def hasher_sensitivity(
-    structure: Structure, transformed_structures: list[Structure], hasher_name: str
+    structure: Structure,
+    transformed_structures: list[Structure],
+    structure_checker: StructureEquivalenceChecker,
 ) -> float:
     """
     Computes the proportion of transformed structures with hashes equal to the original structure's hash.
@@ -172,27 +198,38 @@ def hasher_sensitivity(
         The original structure.
     transformed_structures : list[Structure]
         List of transformed structures.
-    hasher_name : str
-        Name of the hasher to be used.
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker
 
     Returns
     -------
     float
         Proportion of hashes equal to the original hash.
     """
-    if hasher_name not in HASHERS:
-        raise ValueError(f"Unknown hasher: {hasher_name}")
+    # This dichotomy allows to avoid hashing the original structure at every comparison
+    # It can speed up the benchmark but just by a constant factor so it could be removed
+    if isinstance(structure_checker, HasherBase):
+        # Compute hash for the original structure
+        original_hash = structure_checker.get_material_hash(structure)
+        print("original structure hash:", original_hash)
+        # Compute hashes for transformed structures
+        transformed_hashes = [
+            structure_checker.get_material_hash(s) for s in transformed_structures
+        ]
 
-    hasher = HASHERS[hasher_name]()
+        # Calculate the proportion of hashes matching the original hash
+        matching_hashes = sum(1 for h in transformed_hashes if h == original_hash)
+    elif isinstance(structure_checker, SimilarityMatcherBase):
+        # Compute similarity for transformed structures
+        matching_with_transformed = [
+            structure_checker.is_equivalent(structure, s)
+            for s in transformed_structures
+        ]
 
-    # Compute hash for the original structure
-    original_hash = hasher.get_material_hash(structure)
-    print("original structure hash:", original_hash)
-    # Compute hashes for transformed structures
-    transformed_hashes = [hasher.get_material_hash(s) for s in transformed_structures]
-
-    # Calculate the proportion of hashes matching the original hash
-    matching_hashes = sum(1 for h in transformed_hashes if h == original_hash)
+        # Calculate the proportion of similarities matching the original similarity
+        matching_hashes = sum(1 for h in matching_with_transformed if h)
+    else:
+        raise ValueError("Unknown structure checker")
 
     return matching_hashes / len(transformed_structures)
 
@@ -201,7 +238,7 @@ def mean_sensitivity(
     structure_data: list[Structure],
     test_case: str,
     parameter: tuple[str, any],
-    hasher_name: str,
+    structure_checker: StructureEquivalenceChecker,
 ) -> float:
     """
     Computes the mean sensitivity for all structures in the dataset.
@@ -214,8 +251,8 @@ def mean_sensitivity(
         Test case to be applied.
     parameter : tuple[str, any]
         Name and value of the parameter to be used for the transformation.
-    hasher_name : str
-        Name of the hasher to be used.
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker
 
     Returns
     -------
@@ -229,8 +266,13 @@ def mean_sensitivity(
         # Apply transformation
         transformed_structures = apply_transformation(structure, test_case, parameter)
         # Compute sensitivity
-        sensitivity = hasher_sensitivity(structure, transformed_structures, hasher_name)
-        print(f"sensitivity to its {len(transformed_structures)} tranformed structures:", sensitivity)
+        sensitivity = hasher_sensitivity(
+            structure, transformed_structures, structure_checker
+        )
+        print(
+            f"sensitivity to its {len(transformed_structures)} tranformed structures:",
+            sensitivity,
+        )
         sensitivities.append(sensitivity)
 
     # Calculate and return mean sensitivity
@@ -238,7 +280,9 @@ def mean_sensitivity(
 
 
 def sensitivity_over_parameter_range(
-    structure_data: list[Structure], test_case: str, hasher_name: str
+    structure_data: list[Structure],
+    test_case: str,
+    structure_checker: StructureEquivalenceChecker,
 ) -> dict[float, float]:
     """
     Computes mean sensitivity for a range of parameter values from PARAMETERS.
@@ -249,8 +293,8 @@ def sensitivity_over_parameter_range(
         List of structures to be processed.
     test_case : str
         Test case to be applied.
-    hasher_name : str
-        Name of the hasher to be used.
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker
 
     Returns
     -------
@@ -268,21 +312,27 @@ def sensitivity_over_parameter_range(
     results = {}
     for param_value in param_range:
         parameter = (param_name, param_value)
-        mean_sens = mean_sensitivity(structure_data, test_case, parameter, hasher_name)
+        mean_sens = mean_sensitivity(
+            structure_data, test_case, parameter, structure_checker
+        )
         results[param_value] = mean_sens
         print("results", results)
 
     return results
 
 
-def benchmark_hasher(
-    structure_data: list[Structure], test_case: str
+def benchmark_transformations(
+    structure_checker: StructureEquivalenceChecker,
+    structure_data: list[Structure],
+    test_case: Optional[str],
 ) -> dict[str, dict[float, float]]:
     """
-    Benchmarks all hashers over parameter ranges.
+    Benchmarks the given structure_checker on the provided structure data for a given structure checker.
 
     Parameters
     ----------
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker. This can be a hasher or a similarity matcher.
     structure_data : list[Structure]
         List of structures to be processed.
     test_case : str
@@ -293,12 +343,23 @@ def benchmark_hasher(
     dict[str, dict[float, float]]
         Dictionary containing results for each hasher.
     """
-    results = {}
-    for hasher_name in HASHERS.keys():
-        results[hasher_name] = sensitivity_over_parameter_range(
-            structure_data, test_case, hasher_name
+    all_results = {}
+    start_time = time.time()
+    if not (test_case):
+        for test_case in ALL_TEST_CASES:
+            results = sensitivity_over_parameter_range(
+                structure_data, test_case, structure_checker
+            )
+            all_results[test_case] = results
+    else:
+        results = sensitivity_over_parameter_range(
+            structure_data, test_case, structure_checker
         )
-    return results
+        all_results[test_case] = results
+
+    end_time = time.time()
+
+    return all_results, end_time - start_time
 
 
 def diagram_sensitivity(
@@ -324,8 +385,19 @@ def diagram_sensitivity(
     output_dir : str
         Directory to save the output plot.
     """
+<<<<<<< HEAD
     results = benchmark_hasher(structure_data, test_case)
     print('final dict results :: ', results)
+=======
+
+    results = {}
+    for hasher_key, hasher in HASHERS.items():
+        hasher = hasher()
+        results_hasher, _ = benchmark_transformations(
+            hasher, structure_data, test_case
+        )[test_case]
+        results[hasher_key] = results_hasher
+>>>>>>> bb0e7a1d5479deb6beb98dd74de83cdc9264be85
 
     plt.figure(figsize=(10, 6))
     for hasher_name, data in results.items():
@@ -378,9 +450,9 @@ def main():
 
     parser = ArgumentParser(description="Benchmark hashers.")
     parser.add_argument(
-        "--hasher",
-        choices=list(HASHERS.keys()) + ["all"],
-        help="The name of the hasher to benchmark.",
+        "--algorithm",
+        choices=list(STRUCTURE_CHECKERS.keys()) + ["all"],
+        help="The name of the structure checker to benchmark.",
     )
     parser.add_argument(
         "--test-cases",
@@ -388,21 +460,62 @@ def main():
         help="The test cases to run. If not provided, all test cases will be run.",
     )
     parser.add_argument(
-        "--ignore-test-cases",
-        nargs="+",
-        help="The test cases to ignore. If not provided, all test cases will be run.",
+        "--output-path",
+        type=str,
+        help="Output path for the results. Default: 'results/'",
+        default="results/",
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="Name of the .yaml configuration file to use for the hyperparameters of the hasher. Defaults to default.yaml",
+        default="default.yaml",
     )
     args = parser.parse_args()
 
-    for hasher_name, hasher_class in HASHERS.items():
-        if args.hasher != "all" and hasher_name != args.hasher:
+    # TODO: Combine that + the flag parser with other benchmarks into benchmark utils functions
+    # Could be done in the same script with a flag to specify the benchmark type
+    config = yaml.safe_load(open(Path("configs") / args.config, "r"))
+    output_path = Path(args.output_path) / datetime.datetime.now().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+    os.makedirs(output_path, exist_ok=True)
+    yaml.dump(config, open(output_path / "config.yaml", "w"))
+
+    if args.algorithm not in STRUCTURE_CHECKERS and args.algorithm != "all":
+        raise ValueError(
+            f"Invalid algorithm: {args.algorithm}. Must be one of: {list(STRUCTURE_CHECKERS.keys()) + ['all']}"
+        )
+
+    # TODO: Create a separate benchmark dataset?
+    structure_data = get_data_from_hugging_face(seed=0)
+
+    all_results = {}
+    for structure_checker_name, structure_checker_class in STRUCTURE_CHECKERS.items():
+        if args.algorithm != "all" and structure_checker_name != args.algorithm:
             continue
 
-        hasher = hasher_class()
-        hasher_time = benchmark_hasher(
-            hasher.hash, args.test_cases, args.ignore_test_cases
+        structure_checker = structure_checker_class(
+            **config.get(structure_checker_name, {})
         )
-        print(f"{hasher_name}: {hasher_time:.3f} s")
+        results_dict, structure_checker_time = benchmark_transformations(
+            structure_checker, structure_data, args.test_cases
+        )
+        all_results[structure_checker_name] = results_dict
+        json.dump(
+            results_dict,
+            open(
+                output_path / f"{structure_checker_name}_results_disordered.json", "w"
+            ),
+        )
+
+        print(f"{structure_checker_name}: {structure_checker_time:.3f} s")
+
+    if args.algorithm == "all":
+        json.dump(
+            all_results,
+            open(output_path / "all_results_disordered.json", "w"),
+        )
 
 
 if __name__ == "__main__":

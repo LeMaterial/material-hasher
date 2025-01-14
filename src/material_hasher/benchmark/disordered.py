@@ -1,14 +1,13 @@
-from typing import List, Dict
-from material_hasher.types import StructureEquivalenceChecker
-from pymatgen.core import Structure
-from material_hasher.benchmark.utils import get_structure_from_dict
-
-from datasets import load_dataset, Dataset
-import tqdm
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+import tqdm
+from datasets import Dataset, load_dataset
+from pymatgen.core import Structure
 
+from material_hasher.benchmark.utils import get_structure_from_dict
+from material_hasher.types import StructureEquivalenceChecker
 
 HF_DISORDERED_PATH = "LeMaterial/sqs_materials"
 
@@ -114,7 +113,7 @@ def get_dissimilar_structures(
     """
     from itertools import combinations
 
-    n_picked_per_pair = 10
+    n_picked_per_pair = 40
     np.random.seed(seed)
     dissimilar_structures = []
 
@@ -134,6 +133,33 @@ def get_dissimilar_structures(
     return dissimilar_structures
 
 
+def get_group_structure_results(
+    structure_checker: StructureEquivalenceChecker, structures: List[Structure]
+) -> dict:
+    """Get classification metrics from a list of structures.
+    This function computes the pairwise equivalence matrix and then the classification metrics.
+
+    Parameters
+    ----------
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker.
+    structures : List[Structure]
+        List of structures to compute pairwise equivalence on.
+
+    Returns
+    -------
+    metrics : dict
+        Dictionary containing the classification metrics.
+    """
+
+    pairwise_equivalence = structure_checker.get_pairwise_equivalence(structures)
+    # we only need the upper triangular part of the matrix
+    triu_indices = np.triu_indices(len(structures), k=1)
+    equivalence = np.array(pairwise_equivalence)[triu_indices].astype(int)
+    metrics = get_classification_results(equivalence)
+    return metrics
+
+
 def get_classification_results(equivalence: np.ndarray) -> dict:
     """Get classification metrics from the pairwise equivalence matrix.
     Since all samples are labeled similar in this case, only the success rate is interesting
@@ -148,7 +174,6 @@ def get_classification_results(equivalence: np.ndarray) -> dict:
     metrics : dict
         Dictionary containing the classification metrics.
     """
-
     TP = np.sum(equivalence)
     FN = np.sum(equivalence == 0)
     success_rate = TP / (TP + FN)
@@ -157,32 +182,37 @@ def get_classification_results(equivalence: np.ndarray) -> dict:
 
 
 def get_classification_results_dissimilar(
-    dissimilar_structures: List[Structure],
+    dissimilar_structures: List[List[Structure]],
     structure_checker: StructureEquivalenceChecker,
-) -> Dict[str, float]:
-    """Get classification metrics from the dissimilar structures.
+) -> Dict[str, List[float]]:
+    """Get classification metrics from the dissimilar structures. Takes a list of lists of dissimilar structures for each seed.
     Only the success rate is interesting in this case because all samples are labeled dissimilar (so positive in this case).
 
     Parameters
     ----------
-    dissimilar_structures : List[Structure]
-        List of dissimilar structures.
+    dissimilar_structures : List[List[Structure]]
+        List of dissimilar structures for each seed.
     structure_checker : StructureEquivalenceChecker
         Structure equivalence checker.
 
     Returns
     -------
-    metrics : Dict[str, float]
-        Dictionary containing the classification metrics.
+    metrics : Dict[str, List[float]]
+        Dictionary containing the classification metrics as a list of success rates for each seed.
     """
-    TP = 0
-    FN = 0
-    for structure1, structure2 in tqdm.tqdm(dissimilar_structures, desc="Dissimilar"):
-        is_equivalent = structure_checker.is_equivalent(structure1, structure2)
-        TP += int(
-            not is_equivalent
-        )  # The structures are not equivalent, so the prediction is correct
-        FN += int(is_equivalent)
+    success_rates = []
+    for dissimilar_structures_seed in tqdm.tqdm(
+        dissimilar_structures, desc="Dissimilar"
+    ):
+        TP = 0
+        FN = 0
+        for structure1, structure2 in dissimilar_structures_seed:
+            is_equivalent = structure_checker.is_equivalent(structure1, structure2)
+            TP += int(
+                not is_equivalent
+            )  # The structures are not equivalent, so the prediction is correct
+            FN += int(is_equivalent)
 
-    success_rate = TP / (TP + FN)
-    return {"success_rate": success_rate}
+        success_rate = TP / (TP + FN)
+        success_rates.append(success_rate)
+    return {"success_rate": success_rates}

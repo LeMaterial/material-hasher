@@ -1,20 +1,21 @@
-from collections import defaultdict
 import datetime
-from pathlib import Path
-import yaml
 import os
-import tqdm
-
-from typing import Tuple
 import time
+from collections import defaultdict
+from pathlib import Path
+from typing import Dict, List, Tuple
+
 import numpy as np
 import pandas as pd
+import tqdm
+import yaml
+from pymatgen.core import Structure
 
 from material_hasher.benchmark.disordered import (
     download_disordered_structures,
-    get_classification_results,
-    get_dissimilar_structures,
     get_classification_results_dissimilar,
+    get_dissimilar_structures,
+    get_group_structure_results,
 )
 from material_hasher.hasher import HASHERS
 from material_hasher.similarity import SIMILARITY_MATCHERS
@@ -23,8 +24,56 @@ from material_hasher.types import StructureEquivalenceChecker
 STRUCTURE_CHECKERS = {**HASHERS, **SIMILARITY_MATCHERS}
 
 
+def run_group_structures_benchmark(
+    structure_checker: StructureEquivalenceChecker,
+    group: str,
+    structures: List[Structure],
+    n_pick_random: int = 30,
+    n_random_structures: int = 30,
+    seeds: List[int] = [0, 1, 2, 3, 4],
+) -> Dict[str, List[float]]:
+    """Run the benchmark for a group of structures.
+    If the group has more than n_pick_random structures, pick n_random_structures random structures for all seed in seeds.
+    Otherwise, pick all the structures and there is only one success rate.
+
+    Parameters
+    ----------
+    structure_checker : StructureEquivalenceChecker
+        Structure equivalence checker.
+    group : str
+        Group name.
+    structures : List[Structure]
+        List of structures in the group.
+    n_pick_random : int
+        Number of structures to pick randomly.
+    n_random_structures : int
+        Number of random structures to pick.
+    seeds : List[int]
+        Seeds for the random number generator.
+    """
+    if len(structures) > n_pick_random:
+        print(
+            f"Group {group} has {len(structures)} structures. Taking {min(n_random_structures, len(structures))} random for seeds {seeds}"
+        )
+        metrics = {"success_rate": []}
+        for seed in seeds:
+            np.random.seed(seed)
+            np.random.shuffle(structures)
+            structures_seed = structures[: min(n_random_structures, len(structures))]
+            metrics_seed = get_group_structure_results(
+                structure_checker, structures_seed
+            )
+            metrics["success_rate"].append(metrics_seed["success_rate"])
+    else:
+        print(f"\n\n-- Group: {group} with {len(structures)} structures --")
+        metrics = get_group_structure_results(structure_checker, structures)
+        metrics["success_rate"] = [metrics["success_rate"]]
+    return metrics
+
+
 def benchmark_disordered_structures(
     structure_checker: StructureEquivalenceChecker,
+    seeds: List[int] = [0, 1, 2, 3, 4],
 ) -> Tuple[pd.DataFrame, float]:
     """Benchmark the disordered structures using the given hasher or similarity matcher.
 
@@ -42,7 +91,9 @@ def benchmark_disordered_structures(
     """
     print("Downloading disordered structures...")
     structures = download_disordered_structures()
-    dissimilar_structures = get_dissimilar_structures(structures)
+    dissimilar_structures = [
+        get_dissimilar_structures(structures, seed) for seed in seeds
+    ]
     results = defaultdict(dict)
 
     start_time = time.time()
@@ -51,24 +102,23 @@ def benchmark_disordered_structures(
         dissimilar_structures, structure_checker
     )
     results["dissimilar_case"] = dissimilar_metrics
-    print(f"Success rate: {(dissimilar_metrics['success_rate'] * 100):.2f}%")
+    print(
+        f"Success rate: {np.mean(dissimilar_metrics['success_rate']) * 100:.2f}%"
+        + r" $\pm$ "
+        + f"{np.std(dissimilar_metrics['success_rate']) * 100:.2f}%"
+    )
 
     print("Benchmarking disordered structures...")
     for group, structures in tqdm.tqdm(structures.items()):
-        if len(structures) > 30:
-            print(
-                f"Group {group} has {len(structures)} structures. Taking the first 30."
-            )
-            structures = structures[:30]
-        print(f"\n\n-- Group: {group} with {len(structures)} structures --")
-        pairwise_equivalence = structure_checker.get_pairwise_equivalence(structures)
-        triu_indices = np.triu_indices(len(structures), k=1)
-        equivalence = np.array(pairwise_equivalence)[triu_indices].astype(int)
-        metrics = get_classification_results(equivalence)
+        metrics = run_group_structures_benchmark(structure_checker, group, structures)
         results[group] = metrics
-        print(f"Success rate: {(metrics['success_rate'] * 100):.2f}%")
+        print(
+            f"Success rate: {(np.mean(metrics['success_rate']) * 100):.2f}%"
+            + r" $\pm$ "
+            + f"{(np.std(metrics['success_rate']) * 100):.2f}%"
+        )
     total_time = time.time() - start_time
-    results["total_time"] = {"time": total_time}
+    results["total_time (s)"] = total_time
 
     df_results = pd.DataFrame(results).T
     print(df_results)
@@ -124,6 +174,7 @@ def main():
             f"Invalid algorithm: {args.algorithm}. Must be one of: {list(STRUCTURE_CHECKERS.keys()) + ['all']}"
         )
 
+    all_results = {}
     for structure_checker_name, structure_checker_class in STRUCTURE_CHECKERS.items():
         if args.algorithm != "all" and structure_checker_name != args.algorithm:
             continue
@@ -137,7 +188,12 @@ def main():
         df_results.to_csv(
             output_path / f"{structure_checker_name}_results_disordered.csv"
         )
+        all_results[structure_checker_name] = df_results
         print(f"{structure_checker_name}: {structure_checker_time:.3f} s")
+
+    if args.algorithm == "all":
+        all_results = pd.concat(all_results, names=["algorithm"])
+        all_results.to_csv(output_path / "all_results_disordered.csv")
 
 
 if __name__ == "__main__":

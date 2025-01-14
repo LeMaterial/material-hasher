@@ -5,6 +5,7 @@ from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core import Structure
 
 
+
 class SPGLibSymmetry:
     """
     Symmetry space group number using SPGLib via Pymatgen

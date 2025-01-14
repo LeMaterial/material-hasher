@@ -12,6 +12,7 @@ dependencies = [
     "torch_geometric>=2.4.0",
     "average-minimum-distance>=1.5.3",
     "datasets>=3.2.0",
+    "moyopy>=0.2.3",
 ]
 
 [build-system]
@@ -32,3 +33,4 @@ dev = [
     "sphinx-math-dollar>=1.2.1",
     "sphinxawesome-theme>=5.3.2",
 ]
+

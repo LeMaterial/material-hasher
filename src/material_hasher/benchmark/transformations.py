@@ -1,26 +1,28 @@
 import inspect
 import random
 from typing import Optional, Union
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+
 
 import numpy as np
 from pymatgen.core import Structure, SymmOp
 
 ALL_TEST_CASES = [
-    "gaussian_noise",
+    #"gaussian_noise",
     # "isometric_strain",
     # "strain",
     # "translation",
-    # "symm_ops",
+    "symm_ops",
 ]
 
 #    "gaussian_noise": {"sigma": np.arange(0, 0.31, 0.01).tolist()},
 
 PARAMETERS = {
-    "gaussian_noise": {"sigma": [0, 0.001, 0.003]},
+    #"gaussian_noise": {"sigma": [0, 0.001, 0.003]},
     # "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
     # "strain": {"sigma": [0.01, 0.1, 0.3]},
     # "translation": {"sigma": [0.01, 0.1, 0.3]},
-    # "symm_ops": {},  # No additional parameters
+    "symm_ops": {"type": ["all", "random"]},  
 }
 
 
@@ -48,8 +50,7 @@ def get_new_structure_with_gaussian_noise(
 def get_new_structure_with_isometric_strain(
     structure: Structure, pct: float
 ) -> Structure:
-    """_summary_
-
+    """
     Args:
         structure (Structure): Input structure to modify
         pct (float): Strain applied to lattice in all direction
@@ -62,8 +63,7 @@ def get_new_structure_with_isometric_strain(
 
 
 def get_new_structure_with_strain(structure: Structure, sigma: float) -> Structure:
-    """_summary_
-
+    """
     Args:
         structure (Structure): Input structure to modify
         sigma (float): Percent noise applied to lattice vectors
@@ -76,8 +76,7 @@ def get_new_structure_with_strain(structure: Structure, sigma: float) -> Structu
 
 
 def get_new_structure_with_translation(structure: Structure, sigma: float) -> Structure:
-    """_summary_
-
+    """
     Args:
         structure (Structure): Input structure to modify
         sigma (float): Noise to apply to lattice vectors
@@ -91,32 +90,47 @@ def get_new_structure_with_translation(structure: Structure, sigma: float) -> St
     )
 
 
+
 def get_new_structure_with_symm_ops(
     structure: Structure,
-    symm_ops: Optional[list[SymmOp]] = None,
-) -> Structure:
-    """_summary_
-
-    Args:
-        structure (Structure): Input structure to modify
-        symm_ops (Union[SymmOp]): List of symmetry operation to test on structure
-
-    Returns:
-        Structure: new structure with modification
+    type: str = "random",
+) -> Union[Structure, list[Structure]]:
     """
-    if symm_ops is None:
-        symm_ops = [
-            SymmOp.from_rotation_and_translation()
-        ]  # Default to a list with one SymmOp
+    Modify a structure using symmetry operations.
 
-    # Ensure symm_ops is a list and select one randomly
-    symm_op = random.choice(
-        symm_ops
-    )  # Use random.choice instead of random.choices for a single item
+    Parameters
+    ----------
+    structure : Structure
+        Input structure to modify.
+    symm_ops : str, optional
+        Determines how symmetry operations are applied. Can be 'all' to apply
+        all symmetries, or 'random' to apply one symmetry operation. Defaults to 'random'.
 
-    s = structure.copy()
-    return s.apply_operation(symm_op)
+    Returns
+    -------
+    Union[Structure, list[Structure]]
+        A single modified structure if 'random' is chosen, or a list of modified structures if 'all' is chosen.
 
+    Raises
+    ------
+    ValueError
+        If an invalid value for `symm_ops` is provided.
+    """
+    # Analyze symmetry operations
+    analyzer = SpacegroupAnalyzer(structure)
+    symmetry_operations = analyzer.get_symmetry_operations()
+
+    if type == "all":
+        # Apply all symmetry operations and return a list of modified structures
+        return [structure.copy().apply_operation(op) for op in symmetry_operations]
+    elif type == "random":
+        # Apply a single random symmetry operation
+        random_op = random.choice(symmetry_operations)
+        modified_structure = structure.copy()
+        modified_structure.apply_operation(random_op)
+        return modified_structure
+    else:
+        raise ValueError(f"Invalid value for `symm_ops`: {type}. Use 'all' or 'random'.")
 
 def make_test_cases(
     test_cases: Optional[list[str]] = None,

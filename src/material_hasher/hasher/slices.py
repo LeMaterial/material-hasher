@@ -1,3 +1,7 @@
+# This script requires specific dependencies for proper execution.
+# Install them using:
+# uv pip install -e .[slices]
+
 from pymatgen.core.structure import Structure, Lattice
 from typing import Optional
 from slices.core import SLICES
@@ -67,7 +71,7 @@ class SLICESHasher(HasherBase):
 
 
 
-
+"""
 class TestSLICE:
     def test_slice():
         from pymatgen.core import Structure
@@ -85,3 +89,4 @@ class TestSLICE:
         # Print PDD
         print('SLICES string (material hash):', material_hash)
 
+"""

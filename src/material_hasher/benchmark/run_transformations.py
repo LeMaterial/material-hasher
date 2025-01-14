@@ -122,7 +122,6 @@ def get_data_from_hugging_face(
     # Return the list of pymatgen Structure objects
     return structure_data
 
-
 def apply_transformation(
     structure: Structure,
     test_case: str,
@@ -150,7 +149,6 @@ def apply_transformation(
     ValueError
         If no valid test case is provided.
     """
-
     if not structure:
         raise ValueError("No structure was provided.")
 
@@ -169,11 +167,17 @@ def apply_transformation(
     param_name, param_value = parameter
     kwargs = {param_name: param_value}
 
-    # Apply the transformation and add the transformed structures
-    for _ in range(2):
-        transformed_structure = func(structure, **kwargs)
-        transformed_structures.append(transformed_structure)
+    # Apply the transformation
+    for _ in range(10):
+        result = func(structure, **kwargs)
 
+        if isinstance(result, list):
+            # If the result is a list, extend the transformed_structures list
+            print('number of symmetries performed :', len (result))
+            transformed_structures.extend(result)
+        else:
+            # Otherwise, append the single structure
+            transformed_structures.append(result)
     return transformed_structures
 
 

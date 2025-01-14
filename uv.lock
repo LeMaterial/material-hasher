@@ -1128,6 +1128,7 @@ dependencies = [
     { name = "average-minimum-distance" },
     { name = "datasets" },
     { name = "fairchem-core" },
+    { name = "moyopy" },
     { name = "pymatgen" },
     { name = "structuregraph-helpers" },
     { name = "torch-geometric" },
@@ -1153,6 +1154,7 @@ requires-dist = [
     { name = "average-minimum-distance", specifier = ">=1.5.3" },
     { name = "datasets", specifier = ">=3.2.0" },
     { name = "fairchem-core", specifier = "==1.4.0" },
+    { name = "moyopy", specifier = ">=0.2.3" },
     { name = "pymatgen", specifier = ">=2024.11.13" },
     { name = "structuregraph-helpers", specifier = ">=0.0.9" },
     { name = "torch-geometric", specifier = ">=2.4.0" },
@@ -1244,6 +1246,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/5f/01/d32964d6196ed09e1c99d3dcaa3b9c181f5f833108306ba2d4c752084c13/monty-2024.10.21.tar.gz", hash = "sha256:da69daf11075144c4e4fca1038413cf6ef0fafd3398954b5867de6b43ae5de1f", size = 82496 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/99/4c/213fcf3429991ce542bb6f4e106ab6b8a35518e741f3d1e68b391d80e4cf/monty-2024.10.21-py3-none-any.whl", hash = "sha256:47411cbc77ec827d23b6f2ac0d1b03c55eba7419d66d6df56168d925be31b0a4", size = 68521 },
+]
+
+[[package]]
+name = "moyopy"
+version = "0.2.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/6e/76d14a09c9ff877873b457d9b02f277eab615230ba069ee9750fd3b40d0f/moyopy-0.2.3.tar.gz", hash = "sha256:a8269c693b350529065f5c7208093d53e84825a1dc40bc4ce3bc625c6562ed06", size = 110971 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ab/0e/22c786111fd3289424412b83219e4c1a9209fca755bb5c1e993fbbaa82e1/moyopy-0.2.3-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:3ab2cb151abaf08f0e6f7d69aab63f6b200418970d1c31aa05b36c16dbac1bb2", size = 582456 },
+    { url = "https://files.pythonhosted.org/packages/fc/9b/88d2c4ac31915dbb89f14c20e0236a92cc51a9b7346a47b40b7acb87acd0/moyopy-0.2.3-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:84e9bef87d0ce3884ca83683e285784d154e85fd67c33d958ea2d75b17521125", size = 567133 },
+    { url = "https://files.pythonhosted.org/packages/b4/c4/91b2b5141e23ea169b020b55a2db66789e5f11609b6f97f507af550dacfe/moyopy-0.2.3-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fdd456c8a15385b213af7e9617a58a4dcdee41f6edc8940a5f2f1c393d54729f", size = 698293 },
+    { url = "https://files.pythonhosted.org/packages/a8/5e/1b20bf8db05b8a1e5aea86c59d6f3a08e82e75bb1a0cd69e8b7b3ffe2df7/moyopy-0.2.3-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:383f5bce6b53c9d816ecbffad1aab12fa3403f7268d526ec333a3cf8ecd4f8da", size = 701782 },
+    { url = "https://files.pythonhosted.org/packages/83/88/3cd6c800ba46558a8e7c17b0bfb9218f5292d3953a1467c4e12474712f3f/moyopy-0.2.3-cp38-abi3-win_amd64.whl", hash = "sha256:16337b6f8f14bc063d9b266ea8e9597bf738e957d7851561fa75c81826cc124d", size = 478097 },
 ]
 
 [[package]]

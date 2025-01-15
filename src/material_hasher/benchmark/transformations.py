@@ -8,21 +8,21 @@ import numpy as np
 from pymatgen.core import Structure, SymmOp
 
 ALL_TEST_CASES = [
-    #"gaussian_noise",
+    "gaussian_noise",
     # "isometric_strain",
     # "strain",
     # "translation",
-    "symm_ops",
+    #"symm_ops",
 ]
 
 #    "gaussian_noise": {"sigma": np.arange(0, 0.31, 0.01).tolist()},
 
 PARAMETERS = {
-    #"gaussian_noise": {"sigma": [0, 0.001, 0.003]},
+    "gaussian_noise": {"sigma": [0, 0.001, 0.003]},
     # "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
     # "strain": {"sigma": [0.01, 0.1, 0.3]},
     # "translation": {"sigma": [0.01, 0.1, 0.3]},
-    "symm_ops": {"type": ["all", "random"]},  
+    #"symm_ops": {"structure_symmetries" : ['all_symmetries_found']},  
 }
 
 
@@ -93,8 +93,8 @@ def get_new_structure_with_translation(structure: Structure, sigma: float) -> St
 
 def get_new_structure_with_symm_ops(
     structure: Structure,
-    type: str = "random",
-) -> Union[Structure, list[Structure]]:
+    structure_symmetries: str,
+) -> Union[list[Structure]]:
     """
     Modify a structure using symmetry operations.
 
@@ -120,17 +120,7 @@ def get_new_structure_with_symm_ops(
     analyzer = SpacegroupAnalyzer(structure)
     symmetry_operations = analyzer.get_symmetry_operations()
 
-    if type == "all":
-        # Apply all symmetry operations and return a list of modified structures
-        return [structure.copy().apply_operation(op) for op in symmetry_operations]
-    elif type == "random":
-        # Apply a single random symmetry operation
-        random_op = random.choice(symmetry_operations)
-        modified_structure = structure.copy()
-        modified_structure.apply_operation(random_op)
-        return modified_structure
-    else:
-        raise ValueError(f"Invalid value for `symm_ops`: {type}. Use 'all' or 'random'.")
+    return [structure.copy().apply_operation(op) for op in symmetry_operations]
 
 def make_test_cases(
     test_cases: Optional[list[str]] = None,

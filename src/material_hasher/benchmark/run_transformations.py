@@ -101,7 +101,7 @@ def get_data_from_hugging_face(
     df = ds
     print("Loaded dataset:", len(df))
     np.random.seed(seed)
-    range_select = np.random.choice(len(df), 100, replace=False)
+    range_select = np.random.choice(len(df), 10, replace=False)
     df = df.select(range_select)
 
     # Transform dataset int pymatgen Structure objects
@@ -168,16 +168,16 @@ def apply_transformation(
     kwargs = {param_name: param_value}
 
     # Apply the transformation
-    for _ in range(10):
-        result = func(structure, **kwargs)
-
-        if isinstance(result, list):
+    result = func(structure, **kwargs)
+    if isinstance(result, list):
             # If the result is a list, extend the transformed_structures list
             print('number of symmetries performed :', len (result))
             transformed_structures.extend(result)
-        else:
-            # Otherwise, append the single structure
+    else:
+        for _ in range(2):
+            result = func(structure, **kwargs)
             transformed_structures.append(result)
+
     return transformed_structures
 
 

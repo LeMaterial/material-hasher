@@ -19,26 +19,3 @@ class TestBenchmark_HG:
 
     def recup_mat(self):
         return get_data_from_hugging_face("token")
-
-
-"""
-class TestBenchmark:
-    def test_run(self):
-
-        structure_data = [
-            Structure([[4, 0, 0], [0, 4, 0], [0, 0, 4]], ["Si"], [[0, 0, 0]]),
-            Structure([[3, 2, 9], [1, 3, 0], [1, 0, 3]], ["Au"], [[0, 0, 0]]),
-        ]
-
-        # Iterate over hashers in the HASHERS dictionary
-        for hasher_name, hasher_func in HASHERS.items():
-            print(f"Running benchmark for hasher: {hasher_name}")
-            results = benchmark_hasher(
-                hasher_func=hasher_func,
-                test_cases=ALL_TEST_CASES,
-                ignore_test_cases=None,
-                structure_data=structure_data,
-            )
-            print(f"Results for {hasher_name}:")
-            print(results)
-"""

@@ -59,8 +59,4 @@ class SLICESHasher(HasherBase):
         hash_structure1 = self.get_material_hash(structure1)
         hash_structure2 = self.get_material_hash(structure2)
 
-        if self.shorten_hash:
-            hash_structure1 = shorten_hash(hash_structure1)
-            hash_structure2 = shorten_hash(hash_structure2)
-
         return hash_structure1 == hash_structure2

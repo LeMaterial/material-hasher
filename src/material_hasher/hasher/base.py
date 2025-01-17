@@ -58,6 +58,24 @@ class HasherBase(ABC, StructureEquivalenceChecker):
         """
         pass
 
+    def get_materials_hashes(
+        self,
+        structures: list[Structure],
+    ) -> list[str]:
+        """Returns a list of hashes of the structures.
+
+        Parameters
+        ----------
+        structures : list[Structure]
+            List of structures to hash.
+
+        Returns
+        -------
+        list[str]
+            List of hashes of the structures.
+        """
+        return [self.get_material_hash(structure) for structure in structures]
+
     def get_pairwise_equivalence(
         self, structures: list[Structure], threshold: Optional[float] = None
     ) -> np.ndarray:

@@ -1,4 +1,5 @@
-from typing import Dict, List
+from itertools import combinations
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -7,6 +8,7 @@ from datasets import Dataset, load_dataset
 from pymatgen.core import Structure
 
 from material_hasher.benchmark.utils import get_structure_from_hf_row
+from material_hasher.hasher.base import HasherBase
 from material_hasher.types import StructureEquivalenceChecker
 
 HF_DISORDERED_PATH = "LeMaterial/sqs_materials"
@@ -94,7 +96,7 @@ def download_disordered_structures(
 
 def get_dissimilar_structures(
     groups_dict: Dict[str, List[Structure]], n_picked_per_pair=10, seed=0
-) -> List[Structure]:
+) -> Tuple[List[Tuple[int, int]], List[Structure]]:
     """Get dissimilar structures from the groups dictionary.
 
     Parameters
@@ -108,16 +110,22 @@ def get_dissimilar_structures(
 
     Returns
     -------
-    dissimilar_structures : list
-        List of couples of dissimilar structures.
+    dissimilar_structures : list[Tuple[int, int]]
+        List of couples of dissimilar structures. Each couple is represented
+        by the index of the structures in the unique_structures list.
+    unique_structures : list[Structure]
+        List of unique structures.
     """
-    from itertools import combinations
-
     n_picked_per_pair = 40
     np.random.seed(seed)
+    picked_structures = {}
+    # keep track of the unique structures (to avoid storing structures)
+    unique_structures = []
+    # list of pairs of dissimilar structures (number associated to unique_structures id)
     dissimilar_structures = []
 
     all_group_names = list(groups_dict.keys())
+    # list of all pairs of two different groups
     all_pairs = list(combinations(all_group_names, 2))
 
     for pair in all_pairs:
@@ -125,12 +133,26 @@ def get_dissimilar_structures(
         group2 = groups_dict[pair[1]]
         for _ in range(n_picked_per_pair):
             structure1 = np.random.choice(list(range(len(group1))))
-            structure1 = group1[structure1]
+            if f"{pair[0]}_{structure1}" not in picked_structures:
+                unique_structures.append(group1[structure1])
+                picked_structures[f"{pair[0]}_{structure1}"] = (
+                    len(unique_structures) - 1
+                )
+                structure1_idx = len(unique_structures) - 1
+            else:
+                structure1_idx = picked_structures[f"{pair[0]}_{structure1}"]
             structure2 = np.random.choice(list(range(len(group2))))
-            structure2 = group2[structure2]
-            dissimilar_structures.append((structure1, structure2))
+            if f"{pair[1]}_{structure2}" not in picked_structures:
+                unique_structures.append(group2[structure2])
+                picked_structures[f"{pair[1]}_{structure2}"] = (
+                    len(unique_structures) - 1
+                )
+                structure2_idx = len(unique_structures) - 1
+            else:
+                structure2_idx = picked_structures[f"{pair[1]}_{structure2}"]
+            dissimilar_structures.append((structure1_idx, structure2_idx))
 
-    return dissimilar_structures
+    return dissimilar_structures, unique_structures
 
 
 def get_group_structure_results(
@@ -152,7 +174,14 @@ def get_group_structure_results(
         Dictionary containing the classification metrics.
     """
 
-    pairwise_equivalence = structure_checker.get_pairwise_equivalence(structures)
+    if isinstance(structure_checker, HasherBase):
+        all_hashes = np.array(structure_checker.get_materials_hashes(structures))
+
+        # creates a pairwise equivalence matrix
+        pairwise_equivalence = all_hashes[:, None] == all_hashes[None, :]
+    else:
+        pairwise_equivalence = structure_checker.get_pairwise_equivalence(structures)
+
     # we only need the upper triangular part of the matrix
     triu_indices = np.triu_indices(len(structures), k=1)
     equivalence = np.array(pairwise_equivalence)[triu_indices].astype(int)
@@ -182,18 +211,22 @@ def get_classification_results(equivalence: np.ndarray) -> dict:
 
 
 def get_classification_results_dissimilar(
-    dissimilar_structures: List[List[Structure]],
     structure_checker: StructureEquivalenceChecker,
+    dissimilar_structures: List[List[Tuple[int, int]]],
+    unique_structures: list[List[Structure]],
 ) -> Dict[str, List[float]]:
     """Get classification metrics from the dissimilar structures. Takes a list of lists of dissimilar structures for each seed.
     Only the success rate is interesting in this case because all samples are labeled dissimilar (so positive in this case).
 
     Parameters
     ----------
-    dissimilar_structures : List[List[Structure]]
-        List of dissimilar structures for each seed.
     structure_checker : StructureEquivalenceChecker
         Structure equivalence checker.
+    dissimilar_structures : List[List[Tuple[Structure, Structure]]]
+        List of dissimilar structures in the form of a list of tuples of
+        the index of the structures on unique_structures for each seed.
+    unique_structures : List[Structure]
+        List of unique structures.
 
     Returns
     -------
@@ -201,13 +234,28 @@ def get_classification_results_dissimilar(
         Dictionary containing the classification metrics as a list of success rates for each seed.
     """
     success_rates = []
-    for dissimilar_structures_seed in tqdm.tqdm(
-        dissimilar_structures, desc="Dissimilar"
+    for dissimilar_structures_seed, unique_structures_seed in tqdm.tqdm(
+        zip(dissimilar_structures, unique_structures), desc="Dissimilar"
     ):
         TP = 0
         FN = 0
-        for structure1, structure2 in dissimilar_structures_seed:
-            is_equivalent = structure_checker.is_equivalent(structure1, structure2)
+
+        all_hashes_seed = {}  # for pyright
+        if isinstance(structure_checker, HasherBase):
+            all_hashes_seed = np.array(
+                structure_checker.get_materials_hashes(unique_structures_seed)
+            )
+
+        for structure1_idx, structure2_idx in dissimilar_structures_seed:
+            if isinstance(structure_checker, HasherBase):
+                is_equivalent = (
+                    all_hashes_seed[structure1_idx] == all_hashes_seed[structure2_idx]
+                )
+            else:
+                is_equivalent = structure_checker.is_equivalent(
+                    unique_structures_seed[structure1_idx],
+                    unique_structures_seed[structure2_idx],
+                )
             TP += int(
                 not is_equivalent
             )  # The structures are not equivalent, so the prediction is correct

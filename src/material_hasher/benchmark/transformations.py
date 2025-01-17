@@ -15,7 +15,7 @@ ALL_TEST_CASES = [
 ]
 
 PARAMETERS = {
-    "gaussian_noise": {"sigma": [0, 0.001, 0.003]},
+    "gaussian_noise": {"sigma": np.logspace(0.0001, 0.5,15, base=0.0000001)},
     "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
     "strain": {"sigma": [0.01, 0.1, 0.3]},
     "translation": {"sigma": [0.01, 0.1, 0.3]},

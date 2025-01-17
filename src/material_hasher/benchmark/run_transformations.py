@@ -392,6 +392,7 @@ def diagram_sensitivity(
     plt.title(f"{dataset_name} with noise on {noise_type}")
     plt.legend()
     plt.grid(True)
+    plt.xscale('log')
 
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)

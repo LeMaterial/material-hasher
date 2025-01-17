@@ -1,7 +1,7 @@
-from .entalpic import EntalpicMaterialsHasher
-from .example import SimpleCompositionHasher
-from .pdd import PointwiseDistanceDistributionHasher
-from .slices import SLICESHasher
+from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
+from material_hasher.hasher.example import SimpleCompositionHasher
+from material_hasher.hasher.pdd import PointwiseDistanceDistributionHasher
+from material_hasher.hasher.slices import SLICESHasher
 
 __all__ = ["EntalpicMaterialsHasher"]
 

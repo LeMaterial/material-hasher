@@ -1,12 +1,12 @@
-from pymatgen.analysis.local_env import EconNN, NearNeighbors
+from typing import Optional
 
+from pymatgen.analysis.local_env import EconNN, NearNeighbors
+from pymatgen.core.structure import Structure
+
+from material_hasher.hasher.base import HasherBase
 from material_hasher.hasher.utils.graph import get_weisfeiler_lehman_hash
 from material_hasher.hasher.utils.graph_structure import get_structure_graph
 from material_hasher.hasher.utils.symmetry import AFLOWSymmetry, SPGLibSymmetry
-from pymatgen.core.structure import Structure
-from typing import Optional
-
-from material_hasher.hasher.base import HasherBase
 
 
 def shorten_hash(hash):

@@ -1,5 +1,6 @@
-from pymatgen.core.structure import Structure
 from typing import Dict
+
+from pymatgen.core.structure import Structure
 
 
 def get_structure_from_dict(row: Dict) -> Structure:

@@ -2,9 +2,11 @@
 # Install them using:
 # uv pip install -e .[slices]
 
-from pymatgen.core.structure import Structure, Lattice
 from typing import Optional
+
+from pymatgen.core.structure import Lattice, Structure
 from slices.core import SLICES
+
 from material_hasher.hasher.base import HasherBase
 
 
@@ -68,7 +70,6 @@ class SLICESHasher(HasherBase):
             hash_structure2 = shorten_hash(hash_structure2)
 
         return hash_structure1 == hash_structure2
-
 
 
 """

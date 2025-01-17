@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-import numpy as np
 from typing import Optional
 
+import numpy as np
 from pymatgen.core import Structure
 
 from material_hasher.types import StructureEquivalenceChecker

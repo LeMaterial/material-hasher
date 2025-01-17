@@ -1,21 +1,21 @@
-import pandas as pd
 import os
-import requests
 import tempfile
-import numpy as np
-
-from pymatgen.core import Structure
-from itertools import combinations, islice
-from pandas import DataFrame
-from multiprocessing import Pool
-from functools import partial
-from time import time
-from datasets import Dataset
-from typing import Tuple
 from collections import Counter
+from functools import partial
+from itertools import combinations, islice
+from multiprocessing import Pool
+from time import time
+from typing import Tuple
 
-from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity
+import numpy as np
+import pandas as pd
+import requests
+from datasets import Dataset
+from pandas import DataFrame
+from pymatgen.core import Structure
+
 from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
+from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity
 
 
 def download_and_merge_github_datasets(dataset_name: str) -> DataFrame:

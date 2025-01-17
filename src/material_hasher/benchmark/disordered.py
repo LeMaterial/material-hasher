@@ -35,9 +35,9 @@ def get_group_structures_from_data(
         Dictionary containing the structures grouped by the column.
     """
 
-    assert (
-        group_column in data_groupby.columns
-    ), f"Column {group_column} not found in data_groupby."
+    assert group_column in data_groupby.columns, (
+        f"Column {group_column} not found in data_groupby."
+    )
 
     hf_data = hf_data.select_columns(
         ["lattice_vectors", "species_at_sites", "cartesian_site_positions"]

@@ -1,21 +1,18 @@
 import datetime
 import json
 import os
-import pandas as pd
 import time
 from pathlib import Path
 from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import yaml
 from datasets import Dataset, VerificationMode, concatenate_datasets, load_dataset
 from pymatgen.core import Structure
 
-from material_hasher.benchmark.transformations import (
-    ALL_TEST_CASES,
-    get_test_case,
-)
+from material_hasher.benchmark.transformations import ALL_TEST_CASES, get_test_case
 from material_hasher.benchmark.utils import get_structure_from_dict
 from material_hasher.hasher import HASHERS
 from material_hasher.hasher.base import HasherBase
@@ -44,7 +41,7 @@ def get_hugging_face_dataset(token: Optional[str] = None) -> Dataset:
 
     subsets = [
         "compatible_pbe",
-        "compatible_scan",        
+        "compatible_scan",
         "compatible_pbesol",
         "non_compatible",
     ]
@@ -122,6 +119,7 @@ def get_data_from_hugging_face(
     # Return the list of pymatgen Structure objects
     return structure_data
 
+
 def apply_transformation(
     structure: Structure,
     test_case: str,
@@ -170,9 +168,9 @@ def apply_transformation(
     # Apply the transformation
     result = func(structure, **kwargs)
     if isinstance(result, list):
-            # If the result is a list, extend the transformed_structures list
-            print('number of symmetries performed :', len (result))
-            transformed_structures.extend(result)
+        # If the result is a list, extend the transformed_structures list
+        print("number of symmetries performed :", len(result))
+        transformed_structures.extend(result)
     else:
         for _ in range(2):
             result = func(structure, **kwargs)
@@ -386,12 +384,12 @@ def diagram_sensitivity(
     results = {}
     for hasher_key, hasher in HASHERS.items():
         hasher = hasher()
-        results_hasher= benchmark_transformations(
-            hasher, structure_data, test_case
-        )[0][test_case]
+        results_hasher = benchmark_transformations(hasher, structure_data, test_case)[
+            0
+        ][test_case]
         results[hasher_key] = results_hasher
-    
-    print('final dict results : ', results)
+
+    print("final dict results : ", results)
 
     plt.figure(figsize=(10, 6))
     for hasher_name, data in results.items():
@@ -413,8 +411,6 @@ def diagram_sensitivity(
     )
 
     plt.savefig(output_path_figure, dpi=600, bbox_inches="tight", format="png")
-  
-
 
     # Convert results to DataFrame and save as CSV
     df = pd.DataFrame(results)
@@ -427,6 +423,7 @@ def diagram_sensitivity(
     print(f"Results saved to: {output_path_csv}")
 
     plt.show()
+
 
 def main():
     """

@@ -1,10 +1,10 @@
-from pymatgen.core import Structure
-from amd import PDD, PeriodicSet
-import numpy as np
+from hashlib import sha256
 from typing import Optional
 
+import numpy as np
+from amd import PDD, PeriodicSet
+from pymatgen.core import Structure
 
-from hashlib import sha256
 from material_hasher.hasher.base import HasherBase
 
 

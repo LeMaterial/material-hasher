@@ -1,6 +1,6 @@
 from typing import List, Optional
-import numpy as np
 
+import numpy as np
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.core.structure import Structure
 

@@ -98,7 +98,7 @@ def get_data_from_hugging_face(
     df = ds
     print("Loaded dataset:", len(df))
     np.random.seed(seed)
-    range_select = np.random.choice(len(df), 10, replace=False)
+    range_select = np.random.choice(len(df), 100, replace=False)
     df = df.select(range_select)
 
     # Transform dataset int pymatgen Structure objects
@@ -169,7 +169,6 @@ def apply_transformation(
     result = func(structure, **kwargs)
     if isinstance(result, list):
         # If the result is a list, extend the transformed_structures list
-        print("number of symmetries performed :", len(result))
         transformed_structures.extend(result)
     else:
         for _ in range(2):
@@ -206,7 +205,6 @@ def hasher_sensitivity(
     if isinstance(structure_checker, HasherBase):
         # Compute hash for the original structure
         original_hash = structure_checker.get_material_hash(structure)
-        print("original structure hash:", original_hash)
         # Compute hashes for transformed structures
         transformed_hashes = [
             structure_checker.get_material_hash(s) for s in transformed_structures
@@ -257,16 +255,11 @@ def mean_sensitivity(
     sensitivities = []
 
     for structure in structure_data:
-        print("new material in process !")
         # Apply transformation
         transformed_structures = apply_transformation(structure, test_case, parameter)
         # Compute sensitivity
         sensitivity = hasher_sensitivity(
             structure, transformed_structures, structure_checker
-        )
-        print(
-            f"sensitivity to its {len(transformed_structures)} tranformed structures:",
-            sensitivity,
         )
         sensitivities.append(sensitivity)
 
@@ -299,10 +292,8 @@ def sensitivity_over_parameter_range(
     # Load parameters from test cases
     _, params = get_test_case(test_case)
     param_name = list(params.keys())[0]  # Generalize to fetch the first parameter name
-    print("param_name:", param_name)
 
     param_range = params[param_name]
-    print("param_range:", param_range)
 
     results = {}
     for param_value in param_range:
@@ -311,7 +302,6 @@ def sensitivity_over_parameter_range(
             structure_data, test_case, parameter, structure_checker
         )
         results[param_value] = mean_sens
-        print("results", results)
 
     return results
 
@@ -418,9 +408,6 @@ def diagram_sensitivity(
         output_dir, f"{dataset_name}_{noise_type}_sensitivity_results.csv"
     )
     df.to_csv(output_path_csv, index=True)
-
-    print(f"Figure saved to: {output_path_figure}")
-    print(f"Results saved to: {output_path_csv}")
 
     plt.show()
 

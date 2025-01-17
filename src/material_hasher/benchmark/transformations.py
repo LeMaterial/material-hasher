@@ -7,20 +7,18 @@ from pymatgen.core import Structure, SymmOp
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 ALL_TEST_CASES = [
-    # "gaussian_noise",
-    # "isometric_strain",
-    # "strain",
-    # "translation",
+    "gaussian_noise",
+    "isometric_strain",
+    "strain",
+    "translation",
     "symm_ops",
 ]
 
-#    "gaussian_noise": {"sigma": np.arange(0, 0.31, 0.01).tolist()},
-
 PARAMETERS = {
-    # "gaussian_noise": {"sigma": [0, 0.001, 0.003]},
-    # "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
-    # "strain": {"sigma": [0.01, 0.1, 0.3]},
-    # "translation": {"sigma": [0.01, 0.1, 0.3]},
+    "gaussian_noise": {"sigma": [0, 0.001, 0.003]},
+    "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
+    "strain": {"sigma": [0.01, 0.1, 0.3]},
+    "translation": {"sigma": [0.01, 0.1, 0.3]},
     "symm_ops": {"structure_symmetries": ["all_symmetries_found"]},
 }
 

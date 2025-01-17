@@ -13,7 +13,7 @@ from datasets import Dataset, VerificationMode, concatenate_datasets, load_datas
 from pymatgen.core import Structure
 
 from material_hasher.benchmark.transformations import ALL_TEST_CASES, get_test_case
-from material_hasher.benchmark.utils import get_structure_from_dict
+from material_hasher.benchmark.utils import get_structure_from_hf_row
 from material_hasher.hasher import HASHERS
 from material_hasher.hasher.base import HasherBase
 from material_hasher.similarity import SIMILARITY_MATCHERS
@@ -106,7 +106,7 @@ def get_data_from_hugging_face(
     for row in df:
         try:
             # Construct the Structure object
-            struct = get_structure_from_dict(row)
+            struct = get_structure_from_hf_row(row)
             structure_data.append(struct)
 
         except Exception as e:
@@ -392,7 +392,7 @@ def diagram_sensitivity(
     plt.title(f"{dataset_name} with noise on {noise_type}")
     plt.legend()
     plt.grid(True)
-    plt.xscale('log')
+    plt.xscale("log")
 
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)

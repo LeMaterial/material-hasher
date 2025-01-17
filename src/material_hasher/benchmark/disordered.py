@@ -6,7 +6,7 @@ import tqdm
 from datasets import Dataset, load_dataset
 from pymatgen.core import Structure
 
-from material_hasher.benchmark.utils import get_structure_from_dict
+from material_hasher.benchmark.utils import get_structure_from_hf_row
 from material_hasher.types import StructureEquivalenceChecker
 
 HF_DISORDERED_PATH = "LeMaterial/sqs_materials"
@@ -35,9 +35,9 @@ def get_group_structures_from_data(
         Dictionary containing the structures grouped by the column.
     """
 
-    assert group_column in data_groupby.columns, (
-        f"Column {group_column} not found in data_groupby."
-    )
+    assert (
+        group_column in data_groupby.columns
+    ), f"Column {group_column} not found in data_groupby."
 
     hf_data = hf_data.select_columns(
         ["lattice_vectors", "species_at_sites", "cartesian_site_positions"]
@@ -63,7 +63,7 @@ def get_group_structures_from_data(
     ):
         pbar.set_postfix_str(str(len(indices)))
         group_rows = hf_data.loc[indices]
-        rows = [get_structure_from_dict(row) for _, row in group_rows.iterrows()]
+        rows = [get_structure_from_hf_row(row) for _, row in group_rows.iterrows()]
         groups_dict[group] = rows
 
     return groups_dict

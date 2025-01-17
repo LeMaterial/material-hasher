@@ -3,7 +3,7 @@ from typing import Dict
 from pymatgen.core.structure import Structure
 
 
-def get_structure_from_dict(row: Dict) -> Structure:
+def get_structure_from_hf_row(row: Dict) -> Structure:
     """Get a pymatgen Structure from a dictionary.
     The dictionary should contain the following keys:
         - lattice_vectors: list of lists containing the lattice vectors

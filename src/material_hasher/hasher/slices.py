@@ -64,24 +64,3 @@ class SLICESHasher(HasherBase):
             hash_structure2 = shorten_hash(hash_structure2)
 
         return hash_structure1 == hash_structure2
-
-
-"""
-class TestSLICE:
-    def test_slice():
-        from pymatgen.core import Structure
-
-        # Example structure
-        lattice = Lattice.cubic(4.2)
-        structure = Structure(lattice, ["C", "Si"], [[0, 0, 0],[0.5,0.5,0.5]])
-
-        # Initialize the SLICESHasher
-        hasher = SLICESHasher()
-
-        # Get the SLICES string (material hash)
-        material_hash = hasher.get_material_hash(structure)
-
-        # Print PDD
-        print('SLICES string (material hash):', material_hash)
-
-"""

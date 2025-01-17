@@ -9,12 +9,6 @@ from slices.core import SLICES
 
 from material_hasher.hasher.base import HasherBase
 
-
-def shorten_hash(hash):
-    split = hash.split("_")
-    return split[0] + "_" + split[2]
-
-
 class SLICESHasher(HasherBase):
     def __init__(self):
         """

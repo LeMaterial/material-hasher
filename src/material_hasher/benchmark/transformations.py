@@ -16,9 +16,9 @@ ALL_TEST_CASES = [
 
 PARAMETERS = {
     "gaussian_noise": {"sigma": np.logspace(0.0001, 0.5,15, base=0.0000001)},
-    "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
-    "strain": {"sigma": [0.01, 0.1, 0.3]},
-    "translation": {"sigma": [0.01, 0.1, 0.3]},
+    "isometric_strain": {"pct": [1,1.05,1.1,1.2,1.5]},
+    "strain": {"sigma": np.logspace(0.001, 0.5,10, base=0.0000001)},
+    "translation": {"sigma": np.logspace(0.0001, 0.5,15, base=0.0000001)},
     "symm_ops": {"structure_symmetries": ["all_symmetries_found"]},
 }
 

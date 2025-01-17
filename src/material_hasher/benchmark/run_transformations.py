@@ -382,7 +382,7 @@ def diagram_sensitivity(
     """
 
     results = {}
-    for hasher_key, hasher in HASHERS.items():
+    for hasher_key, hasher in STRUCTURE_CHECKERS.items():
         hasher = hasher()
         results_hasher = benchmark_transformations(hasher, structure_data, test_case)[
             0

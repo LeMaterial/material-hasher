@@ -8,6 +8,6 @@ __all__ = ["EntalpicMaterialsHasher"]
 HASHERS = {
     "Entalpic": EntalpicMaterialsHasher,
     "SimpleComposition": SimpleCompositionHasher,
-    "PDD": PointwiseDistanceDistributionHasher,  # Ajout du PDD hasher
+    "PDD": PointwiseDistanceDistributionHasher,
     "SLICES": SLICESHasher,
 }

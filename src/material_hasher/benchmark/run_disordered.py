@@ -91,15 +91,23 @@ def benchmark_disordered_structures(
     """
     print("Downloading disordered structures...")
     structures = download_disordered_structures()
-    dissimilar_structures = [
+    dissimilar_structures_unique_structures = [
         get_dissimilar_structures(structures, seed) for seed in seeds
+    ]
+    dissimilar_structures = [
+        dissimilar_structures
+        for dissimilar_structures, _ in dissimilar_structures_unique_structures
+    ]
+    unique_structures = [
+        unique_structures
+        for _, unique_structures in dissimilar_structures_unique_structures
     ]
     results = defaultdict(dict)
 
     start_time = time.time()
     print("\n\n-- Dissimilar Structures --")
     dissimilar_metrics = get_classification_results_dissimilar(
-        dissimilar_structures, structure_checker
+        structure_checker, dissimilar_structures, unique_structures
     )
     results["dissimilar_case"] = dissimilar_metrics
     print(
@@ -118,7 +126,7 @@ def benchmark_disordered_structures(
             + f"{(np.std(metrics['success_rate']) * 100):.2f}%"
         )
     total_time = time.time() - start_time
-    results["total_time (s)"] = total_time
+    results["total_time (s)"] = total_time  # type: ignore
 
     df_results = pd.DataFrame(results).T
     print(df_results)

@@ -1,28 +1,25 @@
 import inspect
 import random
 from typing import Optional, Union
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-
 
 import numpy as np
 from pymatgen.core import Structure, SymmOp
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 ALL_TEST_CASES = [
-    #"gaussian_noise",
-    # "isometric_strain",
-    # "strain",
-    # "translation",
+    "gaussian_noise",
+    "isometric_strain",
+    "strain",
+    "translation",
     "symm_ops",
 ]
 
-#    "gaussian_noise": {"sigma": np.arange(0, 0.31, 0.01).tolist()},
-
 PARAMETERS = {
-    #"gaussian_noise": {"sigma": [0, 0.001, 0.003]},
-    # "isometric_strain": {"pct": [0.8, 1.0, 1.2]},
-    # "strain": {"sigma": [0.01, 0.1, 0.3]},
-    # "translation": {"sigma": [0.01, 0.1, 0.3]},
-    "symm_ops": {"structure_symmetries" : ['all_symmetries_found']},  
+    "gaussian_noise": {"sigma": np.logspace(0.0001, 0.5,15, base=0.0000001)},
+    "isometric_strain": {"pct": [1,1.05,1.1,1.2,1.5]},
+    "strain": {"sigma": np.logspace(0.001, 0.5,10, base=0.0000001)},
+    "translation": {"sigma": np.logspace(0.0001, 0.5,15, base=0.0000001)},
+    "symm_ops": {"structure_symmetries": ["all_symmetries_found"]},
 }
 
 
@@ -90,7 +87,6 @@ def get_new_structure_with_translation(structure: Structure, sigma: float) -> St
     )
 
 
-
 def get_new_structure_with_symm_ops(
     structure: Structure,
     structure_symmetries: str,
@@ -120,6 +116,7 @@ def get_new_structure_with_symm_ops(
     symmetry_operations = analyzer.get_symmetry_operations()
 
     return [structure.copy().apply_operation(op) for op in symmetry_operations]
+
 
 def make_test_cases(
     test_cases: Optional[list[str]] = None,

@@ -1,18 +1,12 @@
-from pymatgen.analysis.local_env import EconNN, NearNeighbors
+from typing import Optional
 
+from pymatgen.analysis.local_env import EconNN, NearNeighbors
+from pymatgen.core.structure import Structure
+
+from material_hasher.hasher.base import HasherBase
 from material_hasher.hasher.utils.graph import get_weisfeiler_lehman_hash
 from material_hasher.hasher.utils.graph_structure import get_structure_graph
 from material_hasher.hasher.utils.symmetry import AFLOWSymmetry, SPGLibSymmetry
-from pymatgen.core.structure import Structure
-from typing import Optional
-
-from material_hasher.hasher.base import HasherBase
-
-
-def shorten_hash(hash):
-    split = hash.split("_")
-    return split[0] + "_" + split[2]
-
 
 class EntalpicMaterialsHasher(HasherBase):
     def __init__(
@@ -44,14 +38,15 @@ class EntalpicMaterialsHasher(HasherBase):
             raise ValueError(
                 "Graphing algorithm {} not implemented".format(self.graphing_algorithm)
             )
-        if self.symmetry_labeling == "AFLOW":
-            data["symmetry_label"] = AFLOWSymmetry().get_symmetry_label(structure)
-        elif self.symmetry_labeling == "SPGLib":
-            data["symmetry_label"] = SPGLibSymmetry().get_symmetry_label(structure)
-        else:
-            raise ValueError(
-                "Symmetry algorithm {} not implemented".format(self.symmetry_labeling)
-            )
+        if not self.shorten_hash:
+            if self.symmetry_labeling == "AFLOW":
+                data["symmetry_label"] = AFLOWSymmetry().get_symmetry_label(structure)
+            elif self.symmetry_labeling == "SPGLib":
+                data["symmetry_label"] = SPGLibSymmetry().get_symmetry_label(structure)
+            else:
+                raise ValueError(
+                    "Symmetry algorithm {} not implemented".format(self.symmetry_labeling)
+                )
         if self.include_composition:
             data["composition"] = structure.composition.formula.replace(" ", "")
         return data
@@ -99,8 +94,8 @@ class EntalpicMaterialsHasher(HasherBase):
         hash_structure1 = self.get_material_hash(structure1)
         hash_structure2 = self.get_material_hash(structure2)
 
-        if self.shorten_hash:
-            hash_structure1 = shorten_hash(hash_structure1)
-            hash_structure2 = shorten_hash(hash_structure2)
-
         return hash_structure1 == hash_structure2
+
+class ShortenedEntalpicMaterialsHasher(EntalpicMaterialsHasher):
+    def __init__(self,):
+        super().__init__(shorten_hash=True)

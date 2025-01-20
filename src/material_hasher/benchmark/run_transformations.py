@@ -1,22 +1,19 @@
 import datetime
 import json
 import os
-import pandas as pd
 import time
 from pathlib import Path
 from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import yaml
 from datasets import Dataset, VerificationMode, concatenate_datasets, load_dataset
 from pymatgen.core import Structure
 
-from material_hasher.benchmark.transformations import (
-    ALL_TEST_CASES,
-    get_test_case,
-)
-from material_hasher.benchmark.utils import get_structure_from_dict
+from material_hasher.benchmark.transformations import ALL_TEST_CASES, get_test_case
+from material_hasher.benchmark.utils import get_structure_from_hf_row
 from material_hasher.hasher import HASHERS
 from material_hasher.hasher.base import HasherBase
 from material_hasher.similarity import SIMILARITY_MATCHERS
@@ -44,7 +41,7 @@ def get_hugging_face_dataset(token: Optional[str] = None) -> Dataset:
 
     subsets = [
         "compatible_pbe",
-        "compatible_scan",        
+        "compatible_scan",
         "compatible_pbesol",
         "non_compatible",
     ]
@@ -101,7 +98,7 @@ def get_data_from_hugging_face(
     df = ds
     print("Loaded dataset:", len(df))
     np.random.seed(seed)
-    range_select = np.random.choice(len(df), 10, replace=False)
+    range_select = np.random.choice(len(df), 100, replace=False)
     df = df.select(range_select)
 
     # Transform dataset int pymatgen Structure objects
@@ -109,7 +106,7 @@ def get_data_from_hugging_face(
     for row in df:
         try:
             # Construct the Structure object
-            struct = get_structure_from_dict(row)
+            struct = get_structure_from_hf_row(row)
             structure_data.append(struct)
 
         except Exception as e:
@@ -121,6 +118,7 @@ def get_data_from_hugging_face(
 
     # Return the list of pymatgen Structure objects
     return structure_data
+
 
 def apply_transformation(
     structure: Structure,
@@ -170,9 +168,8 @@ def apply_transformation(
     # Apply the transformation
     result = func(structure, **kwargs)
     if isinstance(result, list):
-            # If the result is a list, extend the transformed_structures list
-            print('number of symmetries performed :', len (result))
-            transformed_structures.extend(result)
+        # If the result is a list, extend the transformed_structures list
+        transformed_structures.extend(result)
     else:
         for _ in range(2):
             result = func(structure, **kwargs)
@@ -208,7 +205,6 @@ def hasher_sensitivity(
     if isinstance(structure_checker, HasherBase):
         # Compute hash for the original structure
         original_hash = structure_checker.get_material_hash(structure)
-        print("original structure hash:", original_hash)
         # Compute hashes for transformed structures
         transformed_hashes = [
             structure_checker.get_material_hash(s) for s in transformed_structures
@@ -259,16 +255,11 @@ def mean_sensitivity(
     sensitivities = []
 
     for structure in structure_data:
-        print("new material in process !")
         # Apply transformation
         transformed_structures = apply_transformation(structure, test_case, parameter)
         # Compute sensitivity
         sensitivity = hasher_sensitivity(
             structure, transformed_structures, structure_checker
-        )
-        print(
-            f"sensitivity to its {len(transformed_structures)} tranformed structures:",
-            sensitivity,
         )
         sensitivities.append(sensitivity)
 
@@ -301,10 +292,8 @@ def sensitivity_over_parameter_range(
     # Load parameters from test cases
     _, params = get_test_case(test_case)
     param_name = list(params.keys())[0]  # Generalize to fetch the first parameter name
-    print("param_name:", param_name)
 
     param_range = params[param_name]
-    print("param_range:", param_range)
 
     results = {}
     for param_value in param_range:
@@ -313,7 +302,6 @@ def sensitivity_over_parameter_range(
             structure_data, test_case, parameter, structure_checker
         )
         results[param_value] = mean_sens
-        print("results", results)
 
     return results
 
@@ -384,14 +372,14 @@ def diagram_sensitivity(
     """
 
     results = {}
-    for hasher_key, hasher in HASHERS.items():
+    for hasher_key, hasher in STRUCTURE_CHECKERS.items():
         hasher = hasher()
-        results_hasher= benchmark_transformations(
-            hasher, structure_data, test_case
-        )[0][test_case]
+        results_hasher = benchmark_transformations(hasher, structure_data, test_case)[
+            0
+        ][test_case]
         results[hasher_key] = results_hasher
-    
-    print('final dict results : ', results)
+
+    print("final dict results : ", results)
 
     plt.figure(figsize=(10, 6))
     for hasher_name, data in results.items():
@@ -404,6 +392,7 @@ def diagram_sensitivity(
     plt.title(f"{dataset_name} with noise on {noise_type}")
     plt.legend()
     plt.grid(True)
+    plt.xscale("log")
 
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
@@ -413,8 +402,6 @@ def diagram_sensitivity(
     )
 
     plt.savefig(output_path_figure, dpi=600, bbox_inches="tight", format="png")
-  
-
 
     # Convert results to DataFrame and save as CSV
     df = pd.DataFrame(results)
@@ -423,10 +410,8 @@ def diagram_sensitivity(
     )
     df.to_csv(output_path_csv, index=True)
 
-    print(f"Figure saved to: {output_path_figure}")
-    print(f"Results saved to: {output_path_csv}")
-
     plt.show()
+
 
 def main():
     """

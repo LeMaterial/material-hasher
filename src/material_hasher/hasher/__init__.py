@@ -1,13 +1,13 @@
-from .entalpic import EntalpicMaterialsHasher
-from .example import SimpleCompositionHasher
-from .pdd import PointwiseDistanceDistributionHasher
-from .slices import SLICESHasher
+from material_hasher.hasher.entalpic import EntalpicMaterialsHasher, ShortenedEntalpicMaterialsHasher
+from material_hasher.hasher.example import SimpleCompositionHasher
+from material_hasher.hasher.pdd import PointwiseDistanceDistributionHasher
+from material_hasher.hasher.slices import SLICESHasher
 
 __all__ = ["EntalpicMaterialsHasher"]
 
 HASHERS = {
     "Entalpic": EntalpicMaterialsHasher,
-    "SimpleComposition": SimpleCompositionHasher,
-    "PDD": PointwiseDistanceDistributionHasher,  # Ajout du PDD hasher
+    "Shortened Entalpic": ShortenedEntalpicMaterialsHasher,
+    "PDD": PointwiseDistanceDistributionHasher,
     "SLICES": SLICESHasher,
 }

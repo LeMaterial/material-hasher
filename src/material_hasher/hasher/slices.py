@@ -3,16 +3,12 @@
 # uv pip install -r requirements_slices.txt
 
 
-from pymatgen.core.structure import Structure, Lattice
 from typing import Optional
+
+from pymatgen.core.structure import Lattice, Structure
 from slices.core import SLICES
+
 from material_hasher.hasher.base import HasherBase
-
-
-def shorten_hash(hash):
-    split = hash.split("_")
-    return split[0] + "_" + split[2]
-
 
 class SLICESHasher(HasherBase):
     def __init__(self):
@@ -64,30 +60,4 @@ class SLICESHasher(HasherBase):
         hash_structure1 = self.get_material_hash(structure1)
         hash_structure2 = self.get_material_hash(structure2)
 
-        if self.shorten_hash:
-            hash_structure1 = shorten_hash(hash_structure1)
-            hash_structure2 = shorten_hash(hash_structure2)
-
         return hash_structure1 == hash_structure2
-
-
-
-"""
-class TestSLICE:
-    def test_slice():
-        from pymatgen.core import Structure
-
-        # Example structure
-        lattice = Lattice.cubic(4.2)
-        structure = Structure(lattice, ["C", "Si"], [[0, 0, 0],[0.5,0.5,0.5]])
-
-        # Initialize the SLICESHasher
-        hasher = SLICESHasher()
-
-        # Get the SLICES string (material hash)
-        material_hash = hasher.get_material_hash(structure)
-
-        # Print PDD
-        print('SLICES string (material hash):', material_hash)
-
-"""

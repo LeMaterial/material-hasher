@@ -1,6 +1,7 @@
 # This script requires specific dependencies for proper execution.
 # Install them using:
-# uv pip install -e .[slices]
+# uv pip install -r requirements_slices.txt
+
 
 from pymatgen.core.structure import Structure, Lattice
 from typing import Optional

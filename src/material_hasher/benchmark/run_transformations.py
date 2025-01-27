@@ -60,7 +60,7 @@ def get_hugging_face_dataset(token: Optional[str] = None) -> Dataset:
 
 
 def get_data_from_hugging_face(
-    token: Optional[str] = None, seed: int = 0
+    token: Optional[str] = None, n_test_elements: int = 100, seed: int = 0
 ) -> list[Structure]:
     """
     Downloads and processes structural data from the Hugging Face `datasets` library.
@@ -73,6 +73,11 @@ def get_data_from_hugging_face(
     token : str, optional
         The authentication token required to access the dataset.
         Optional if the dataset is public or you have already configured the Hugging Face CLI.
+    n_test_elements : int
+        Number of elements to select from the dataset to run the benchmark on. Default is 100.
+        This is used to run the transformation benchmark only a subset of LeMat-Bulk.
+    seed : int
+        Random seed for selecting a subset of the dataset. Default is 0.
 
     Returns
     -------
@@ -97,7 +102,7 @@ def get_data_from_hugging_face(
     # Convert dataset to Pandas DataFrame
     print("Loaded dataset:", len(ds))
     np.random.seed(seed)
-    range_select = np.random.choice(len(ds), 100, replace=False)
+    range_select = np.random.choice(len(ds), n_test_elements, replace=False)
     df = ds.select(range_select)
 
     # Transform dataset int pymatgen Structure objects
@@ -444,6 +449,18 @@ def main():
         default="results/",
     )
     parser.add_argument(
+        "--n-test-elements",
+        type=int,
+        help="Number of elements to select from the dataset to run the benchmark on. Default is 100.",
+        default=100,
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        help="Random seed for selecting a subset of the dataset. Default is 0.",
+        default=0,
+    )
+    parser.add_argument(
         "--config",
         type=str,
         help="Name of the .yaml configuration file to use for the hyperparameters of the hasher. Defaults to default.yaml",
@@ -467,7 +484,9 @@ def main():
         )
 
     # TODO: Create a separate benchmark dataset?
-    structure_data = get_data_from_hugging_face(seed=0)
+    structure_data = get_data_from_hugging_face(
+        n_test_elements=args.n_test_elements, seed=args.seed
+    )
 
     all_results = {}
     for structure_checker_name, structure_checker_class in STRUCTURE_CHECKERS.items():
@@ -481,7 +500,9 @@ def main():
             structure_checker, structure_data, args.test_cases
         )
         all_results[structure_checker_name] = results_dict
-        with open(output_path / f"{structure_checker_name}_results_disordered.json", "w") as fh:
+        with open(
+            output_path / f"{structure_checker_name}_results_disordered.json", "w"
+        ) as fh:
             json.dump(
                 results_dict,
                 fh,

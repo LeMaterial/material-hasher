@@ -11,35 +11,6 @@ class HasherBase(ABC, StructureEquivalenceChecker):
     """Abstract class for matching of the hashes between structures."""
 
     @abstractmethod
-    def is_equivalent(
-        self,
-        structure1: Structure,
-        structure2: Structure,
-        threshold: Optional[float] = None,
-    ) -> bool:
-        """Returns True if the two structures are similar according to the
-        implemented algorithm.
-        Uses a threshold to determine similarity if provided and the algorithm
-        does not have a built-in threshold.
-
-        Parameters
-        ----------
-        structure1 : Structure
-            First structure to compare.
-        structure2 : Structure
-            Second structure to compare.
-        threshold : float, optional
-            Threshold to determine similarity, by default None and the
-            algorithm's default threshold is used if it exists.
-
-        Returns
-        -------
-        bool
-            True if the two structures are similar, False otherwise.
-        """
-        pass
-
-    @abstractmethod
     def get_material_hash(
         self,
         structure: Structure,
@@ -57,6 +28,35 @@ class HasherBase(ABC, StructureEquivalenceChecker):
             Hash of the structure.
         """
         pass
+
+    def is_equivalent(
+        self,
+        structure1: Structure,
+        structure2: Structure,
+        threshold: Optional[float] = None,
+    ) -> bool:
+        """
+        Check if two structures are similar based on the StructureMatcher of
+        pymatgen. The StructureMatcher uses a similarity algorithm based on the
+        maximum common subgraph isomorphism and the Jaccard index of the sites.
+
+        Parameters
+        ----------
+        structure1 : Structure
+            First structure to compare.
+        structure2 : Structure
+            Second structure to compare.
+
+        Returns
+        -------
+        bool
+            True if the two structures are similar, False otherwise.
+        """
+
+        hash_structure1 = self.get_material_hash(structure1)
+        hash_structure2 = self.get_material_hash(structure2)
+
+        return hash_structure1 == hash_structure2
 
     def get_materials_hashes(
         self,

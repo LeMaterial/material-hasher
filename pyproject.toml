@@ -3,7 +3,12 @@ name = "material-hasher"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-authors = [{ name = "vict0rsch", email = "victor.schmidt@entalpic.ai" }]
+authors = [{ name = "vict0rsch", email = "victor.schmidt@entalpic.ai" }, 
+           { name = "msiron-entalpic", email = "martin.siron@entalpic.ai" },
+           { name = "amandinerossello", email = "amandine.rossello@entalpic.ai" },
+           { name = "Ramlaoui", email = "ali.ramlaoui@entalpic.ai" },
+           { name = "etdufay", email = "etienne.du-fayet@entalpic.ai" },
+           ]
 requires-python = ">=3.10"
 dependencies = [
     "pymatgen>=2024.11.13",

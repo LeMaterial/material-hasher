@@ -95,11 +95,10 @@ def get_data_from_hugging_face(
     ds = get_hugging_face_dataset(token)
 
     # Convert dataset to Pandas DataFrame
-    df = ds
-    print("Loaded dataset:", len(df))
+    print("Loaded dataset:", len(ds))
     np.random.seed(seed)
-    range_select = np.random.choice(len(df), 100, replace=False)
-    df = df.select(range_select)
+    range_select = np.random.choice(len(ds), 100, replace=False)
+    df = ds.select(range_select)
 
     # Transform dataset int pymatgen Structure objects
     structure_data = []

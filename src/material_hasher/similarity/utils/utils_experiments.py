@@ -874,7 +874,7 @@ def filter_dataset_and_return_dataframe(
 
 def study_trajectories(dataset, max_number_of_traj):
     results_list = []
-    first_ids = get_relevant_ids(dataset, max_number_of_traj)
+    first_ids = get_relevant_ids(dataset)
     current_number_of_traj = 0
 
     for id in first_ids:

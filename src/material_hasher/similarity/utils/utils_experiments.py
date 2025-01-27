@@ -118,7 +118,9 @@ def compare_single_pair_of_structure(
     return output_tuple
 
 
-def compare_pairs_of_structure_with_pymatgen(df: DataFrame, output_dir: str):
+def compare_pairs_of_structure_with_pymatgen(
+    df: DataFrame, output_dir: str, batch_size: int = 30000000
+):
     """main function to orchestrate the comparison of structures with pymatgen
     iterates over the combinations of material ids and compares the structures
 
@@ -138,8 +140,6 @@ def compare_pairs_of_structure_with_pymatgen(df: DataFrame, output_dir: str):
     -------
     None
     """
-    BATCH_SIZE = 30000000
-
     pymatgen_structures = build_pymatgen_structures(df)
     material_id_list = df["material_id"].tolist()
 
@@ -149,7 +149,7 @@ def compare_pairs_of_structure_with_pymatgen(df: DataFrame, output_dir: str):
     iterator = combinations(material_id_list, 2)
 
     batch_number = 0
-    batched_combinations_of_ids = list(islice(iterator, BATCH_SIZE))
+    batched_combinations_of_ids = list(islice(iterator, batch_size))
 
     while batched_combinations_of_ids:
         _compare_single_pair_of_structure = partial(
@@ -164,7 +164,7 @@ def compare_pairs_of_structure_with_pymatgen(df: DataFrame, output_dir: str):
                 results = p.map(
                     _compare_single_pair_of_structure,
                     batched_combinations_of_ids,
-                    chunksize=300000,
+                    chunksize=batch_size,
                 )
 
             except Exception as e:
@@ -187,7 +187,7 @@ def compare_pairs_of_structure_with_pymatgen(df: DataFrame, output_dir: str):
         print(f"batch {batch_number} done")
 
         batch_number += 1
-        batched_combinations_of_ids = list(islice(iterator, BATCH_SIZE))
+        batched_combinations_of_ids = list(islice(iterator, batch_size))
 
 
 def process_hash(couple_mat_id_structure: tuple, primitive: bool = False):
@@ -332,13 +332,14 @@ def concatenate_parquet_files_and_get_duplicates_from_pymatgen(
         os.path.join(subdir, f) for f in os.listdir(subdir) if f.endswith(".parquet")
     ]
 
-    df_matching = pd.DataFrame()
+    dfs = []
     for file in parquet_files:
         df = pd.read_parquet(file)
-        # keep only the matching pairs
         df = df[df["matching"]]
-        # concatenate the dataframes
-        df_matching = pd.concat([df_matching, df], ignore_index=True)
+        dfs.append(df)
+
+    # only one single concat to avoid multiple copies of the same df
+    df_matching = pd.concat(dfs, ignore_index=True)
 
     return df_matching
 

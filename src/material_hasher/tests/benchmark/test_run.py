@@ -1,12 +1,7 @@
-from datasets import VerificationMode, load_dataset
-from pymatgen.core import Structure
-
 from material_hasher.benchmark.run_transformations import (
-    HASHERS,
     diagram_sensitivity,
     get_data_from_hugging_face,
 )
-from material_hasher.benchmark.transformations import ALL_TEST_CASES, get_test_case
 
 
 # Example usage for TestBenchmark_HG

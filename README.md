@@ -24,11 +24,21 @@ We include the following structure similarity methods:
 - Pymatgen's StructureMatcher `from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity`
 
 ## How to run benchmarks:
+### Disordered benchmark
 To test all the hasher and similarity methods on disordered materials dataset, seeing if each method can match the varying amount of disordered across a set of curated materials:
-`python -m material_hasher.benchmark.run_disordered`
+#### get help:
+`python -m material_hasher.benchmark.run_disordered --help`
 
+#### typical run (test disordered materials benchmark on all algorithms):
+`python -m material_hasher.benchmark.run_disordered --algorithm all`
+
+### Transformation benchmark
 To test all the hasher and similarity methods on varying transformations applied to the structures across materials sampled from LeMat-Bulk:
-`python -m material_hasher.benchmark.run_transformations`
+#### get help:
+`python -m material_hasher.benchmark.run_transformations --help`
+
+#### typical run (test Entalpic fingerprint on all test cases for a single structure):
+`python -m material_hasher.benchmark.run_transformations --algorithm Entalpic  --n-test-elements 1`
 
 ## How to utilize a fingerprint method:
 Here is a sample code to get a hash result:
@@ -46,7 +56,7 @@ We utilize uv. Please have uv installed in your environment, and then run `uv sy
 To utilize SLICES, please run: `uv pip install -r requirements_slices.txt`
 
 
-## Citing
+## Citation
 We are working on a pre-print describing our fingerprint method.
 
 If your work makes use of the varying fingerprint methods, please consider citing:

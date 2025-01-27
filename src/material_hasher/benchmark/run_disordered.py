@@ -170,12 +170,14 @@ def main():
     )
     args = parser.parse_args()
 
-    config = yaml.safe_load(open(Path("configs") / args.config, "r"))
+    with open(Path("configs") / args.config, "r") as fh:
+        config = yaml.safe_load(fh)
     output_path = Path(args.output_path) / datetime.datetime.now().strftime(
         "%Y-%m-%d_%H-%M-%S"
     )
     os.makedirs(output_path, exist_ok=True)
-    yaml.dump(config, open(output_path / "config.yaml", "w"))
+    with open(output_path / "config.yaml", "w") as fh:
+        yaml.dump(config, fh)
 
     if args.algorithm not in STRUCTURE_CHECKERS and args.algorithm != "all":
         raise ValueError(

@@ -89,8 +89,8 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
             config["dataset"] = {
                 "train": {"src": "dummy"}
             }  # for compatibility with yaml loading
-
-            yaml.dump(config, open("/tmp/config.yaml", "w"))
+            with open("/tmp/config.yaml", "w") as fh:
+                yaml.dump(config, fh)
             self.calc = OCPCalculator(config_yml="/tmp/config.yaml", cpu=self.cpu)
         else:
             self.calc = OCPCalculator(checkpoint_path=self.model_path, cpu=self.cpu)

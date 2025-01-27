@@ -459,7 +459,8 @@ def main():
         "%Y-%m-%d_%H-%M-%S"
     )
     os.makedirs(output_path, exist_ok=True)
-    yaml.dump(config, open(output_path / "config.yaml", "w"))
+    with open(output_path / "config.yaml", "w") as fh:
+        yaml.dump(config, fh)
 
     if args.algorithm not in STRUCTURE_CHECKERS and args.algorithm != "all":
         raise ValueError(
@@ -481,20 +482,20 @@ def main():
             structure_checker, structure_data, args.test_cases
         )
         all_results[structure_checker_name] = results_dict
-        json.dump(
-            results_dict,
-            open(
-                output_path / f"{structure_checker_name}_results_disordered.json", "w"
-            ),
-        )
+        with open(output_path / f"{structure_checker_name}_results_disordered.json", "w") as fh:
+            json.dump(
+                results_dict,
+                fh,
+            )
 
         print(f"{structure_checker_name}: {structure_checker_time:.3f} s")
 
     if args.algorithm == "all":
-        json.dump(
-            all_results,
-            open(output_path / "all_results_disordered.json", "w"),
-        )
+        with open(output_path / "all_results_disordered.json", "w") as fh:
+            json.dump(
+                all_results,
+                fh,
+            )
 
 
 if __name__ == "__main__":

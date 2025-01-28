@@ -119,3 +119,38 @@ class PointwiseDistanceDistributionHasher(HasherBase):
             threshold = self.threshold
 
         return np.allclose(hash1, hash2, atol=threshold)
+
+    def get_pairwise_equivalence(
+        self, structures: list[Structure], threshold: Optional[float] = None
+    ) -> np.ndarray:
+        """Returns a matrix of equivalence between structures.
+
+        Parameters
+        ----------
+        structures : list[Structure]
+            List of structures to compare.
+        threshold : float, optional
+            Threshold to determine similarity, by default None and the
+            algorithm's default threshold is used if it exists.
+
+        Returns
+        -------
+        np.ndarray
+            Matrix of equivalence between structures.
+        """
+
+        all_hashes = np.array(self.get_materials_hashes(structures))
+        equivalence_matrix = np.zeros((len(all_hashes), len(all_hashes)), dtype=bool)
+
+        # Fill triu + diag
+        for i, hash1 in enumerate(all_hashes):
+            for j, hash2 in enumerate(all_hashes):
+                if i <= j:
+                    equivalence_matrix[i, j] = self.is_hash_equivalent(
+                        hash1, hash2, threshold
+                    )
+
+        # Fill tril
+        equivalence_matrix = equivalence_matrix | equivalence_matrix.T
+
+        return equivalence_matrix

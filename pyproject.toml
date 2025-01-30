@@ -3,9 +3,23 @@ name = "material-hasher"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-authors = [{ name = "vict0rsch", email = "victor.schmidt@entalpic.ai" }]
+authors = [{ name = "vict0rsch", email = "victor.schmidt@entalpic.ai" }, 
+           { name = "msiron-entalpic", email = "martin.siron@entalpic.ai" },
+           { name = "amandinerossello", email = "amandine.rossello@entalpic.ai" },
+           { name = "Ramlaoui", email = "ali.ramlaoui@entalpic.ai" },
+           { name = "etdufay", email = "etienne.du-fayet@entalpic.ai" },
+           ]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pymatgen>=2024.11.13",
+    "structuregraph-helpers>=0.0.9",
+    "fairchem-core==1.4.0",
+    "torch_geometric>=2.4.0",
+    "average-minimum-distance>=1.5.3",
+    "datasets>=3.2.0",
+    "moyopy>=0.2.3",
+    "pip>=24.3.1",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -25,3 +39,4 @@ dev = [
     "sphinx-math-dollar>=1.2.1",
     "sphinxawesome-theme>=5.3.2",
 ]
+

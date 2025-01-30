@@ -1,0 +1,21 @@
+# HASHERS
+
+Entalpic:
+  shorten_hash: True
+
+PDD:
+  cutoff: 100
+
+# SimpleComposition:
+
+# SIMILARITY
+
+eqv2:
+  threshold: 0.001
+  trained: True
+  cpu: False
+  load_from_hf: True
+  agg_type: sum
+
+pymatgen:
+  tolerance: 0.01

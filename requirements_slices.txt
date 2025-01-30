@@ -1,0 +1,4 @@
+SLICES @ git+https://github.com/xiaohang007/SLICES.git
+m3gnet==0.2.4
+chgnet==0.3.2
+tensorflow==2.15.0

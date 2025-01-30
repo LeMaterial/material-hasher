@@ -7,11 +7,11 @@ from pymatgen.core import Structure
 
 class SPGLibSymmetry:
     """
-    Symmetry space group number using SPGLib via Pymatgen
+    Object used to compute symmetry based on SPGLib
     """
 
     def __init__(self, symprec: float = 0.01):
-        """Class to set settings for Pymatgen's symmetry detection
+        """Set settings for Pymatgen's symmetry detection
 
         Args:
             symprec (float, optional): Symmetry precision tollerance.
@@ -41,7 +41,8 @@ class AFLOWSymmetry:
         """AFLOW Symmetry
 
         Args:
-            aflow_executable (str, optional): AFLOW executable. If none listed tries to find aflow in system path
+            aflow_executable (str, optional): AFLOW executable.
+                If none listed tries to find aflow in system path
 
         Raises:
             RuntimeError: If AFLOW is not found

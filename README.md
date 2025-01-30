@@ -105,4 +105,3 @@ EquiformerV2
   year={2023}
 }
 ```
-

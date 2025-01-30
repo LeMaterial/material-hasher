@@ -37,7 +37,7 @@ def download_and_merge_github_datasets(dataset_name: str) -> DataFrame:
     DataFrame
         the merged dataframes
     """
-    base_url = f"https://raw.githubusercontent.com/jiaor17/DiffCSP-PP/refs/heads/main/data/{dataset_name}/"
+    base_url = f"https://raw.githubusercontent.com/jiaor17/DiffCSP-PP/49a72521bce428c91f5ccafcf18f614b3426e769/data/{dataset_name}/"
     merged_dataset = pd.DataFrame()
 
     for file in ["train.csv", "val.csv", "test.csv"]:

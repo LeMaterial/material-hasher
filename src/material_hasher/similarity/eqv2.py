@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional, Union
+import logging
 
 import ase
 import numpy as np
@@ -12,6 +13,8 @@ from pymatgen.core import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
 
 from material_hasher.similarity.base import SimilarityMatcherBase
+
+logger = logging.getLogger(__name__)
 
 HF_MODEL_REPO_ID = "fairchem/OMAT24"
 HF_MODEL_PATH = "eqV2_31M_omat_mp_salex.pt"
@@ -77,12 +80,12 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
                     repo_id=HF_MODEL_REPO_ID, filename=HF_MODEL_PATH
                 )
             except Exception as e:
-                print(
+                logger.warning(
                     f"Failed to download the model from the Hugging Face model hub: {e}"
                 )
 
         if not self.trained:
-            print("⚠️ Loading an untrained model because trained is set to False.")
+            logger.warning("⚠️ Loading an untrained model because trained is set to False.")
             calc = OCPCalculator(checkpoint_path=self.model_path, cpu=self.cpu)
             config = calc.trainer.config
 

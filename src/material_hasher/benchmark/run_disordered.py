@@ -4,12 +4,15 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
+import logging
 
 import numpy as np
 import pandas as pd
 import tqdm
 import yaml
 from pymatgen.core import Structure
+
+logger = logging.getLogger(__name__)
 
 from material_hasher.benchmark.disordered import (
     download_disordered_structures,
@@ -52,7 +55,7 @@ def run_group_structures_benchmark(
         Seeds for the random number generator.
     """
     if len(structures) > n_pick_random:
-        print(
+        logger.info(
             f"Group {group} has {len(structures)} structures. Taking {min(n_random_structures, len(structures))} random for seeds {seeds}"
         )
         metrics = {"success_rate": []}
@@ -65,7 +68,7 @@ def run_group_structures_benchmark(
             )
             metrics["success_rate"].append(metrics_seed["success_rate"])
     else:
-        print(f"\n\n-- Group: {group} with {len(structures)} structures --")
+        logger.info(f"\n\n-- Group: {group} with {len(structures)} structures --")
         metrics = get_group_structure_results(structure_checker, structures)
         metrics["success_rate"] = [metrics["success_rate"]]
     return metrics
@@ -89,7 +92,7 @@ def benchmark_disordered_structures(
     total_time : float
         Total time taken for the benchmark
     """
-    print("Downloading disordered structures...")
+    logger.info("Downloading disordered structures...")
     structures = download_disordered_structures()
     dissimilar_structures_unique_structures = [
         get_dissimilar_structures(structures, seed) for seed in seeds
@@ -105,22 +108,22 @@ def benchmark_disordered_structures(
     results = defaultdict(dict)
 
     start_time = time.time()
-    print("\n\n-- Dissimilar Structures --")
+    logger.info("\n\n-- Dissimilar Structures --")
     dissimilar_metrics = get_classification_results_dissimilar(
         structure_checker, dissimilar_structures, unique_structures
     )
     results["dissimilar_case"] = dissimilar_metrics
-    print(
+    logger.info(
         f"Success rate: {np.mean(dissimilar_metrics['success_rate']) * 100:.2f}%"
         + r" $\pm$ "
         + f"{np.std(dissimilar_metrics['success_rate']) * 100:.2f}%"
     )
 
-    print("Benchmarking disordered structures...")
+    logger.info("Benchmarking disordered structures...")
     for group, structures in tqdm.tqdm(structures.items()):
         metrics = run_group_structures_benchmark(structure_checker, group, structures)
         results[group] = metrics
-        print(
+        logger.info(
             f"Success rate: {(np.mean(metrics['success_rate']) * 100):.2f}%"
             + r" $\pm$ "
             + f"{(np.std(metrics['success_rate']) * 100):.2f}%"
@@ -129,7 +132,7 @@ def benchmark_disordered_structures(
     results["total_time (s)"] = total_time  # type: ignore
 
     df_results = pd.DataFrame(results).T
-    print(df_results)
+    logger.info(df_results)
 
     return df_results, total_time
 
@@ -199,7 +202,7 @@ def main():
             output_path / f"{structure_checker_name}_results_disordered.csv"
         )
         all_results[structure_checker_name] = df_results
-        print(f"{structure_checker_name}: {structure_checker_time:.3f} s")
+        logger.info(f"{structure_checker_name}: {structure_checker_time:.3f} s")
 
     if args.algorithm == "all":
         all_results = pd.concat(all_results, names=["algorithm"])

@@ -1,5 +1,6 @@
 from itertools import combinations
 from typing import Dict, List, Tuple
+import logging
 
 import numpy as np
 import pandas as pd
@@ -10,6 +11,8 @@ from pymatgen.core import Structure
 from material_hasher.benchmark.utils import get_structure_from_hf_row
 from material_hasher.hasher.base import HasherBase
 from material_hasher.types import StructureEquivalenceChecker
+
+logger = logging.getLogger(__name__)
 
 HF_DISORDERED_PATH = "LeMaterial/sqs_materials"
 
@@ -49,7 +52,7 @@ def get_group_structures_from_data(
 
     groups = {k: v for k, v in groups.items() if len(v) > no_unique}
 
-    print(f"Found {len(groups)} groups with more than {no_unique} structures.")
+    logger.info(f"Found {len(groups)} groups with more than {no_unique} structures.")
 
     hf_data = hf_data.select(np.concatenate(list(groups.values()))).to_pandas()
 

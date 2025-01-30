@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Optional, Union
+import logging
 
 import ase
 import numpy as np
@@ -16,6 +17,7 @@ from material_hasher.similarity.base import SimilarityMatcherBase
 
 HF_MODEL_REPO_ID = os.getenv("HF_MODEL_REPO_ID", "fairchem/OMAT24")
 HF_MODEL_PATH = os.getenv("HF_MODEL_PATH", "eqV2_31M_omat_mp_salex.pt")
+logger = logging.getLogger(__name__)
 
 
 class EquiformerV2Similarity(SimilarityMatcherBase):
@@ -78,12 +80,14 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
                     repo_id=HF_MODEL_REPO_ID, filename=HF_MODEL_PATH
                 )
             except Exception as e:
-                print(
+                logger.error(
                     f"Failed to download the model from the Hugging Face model hub: {e}"
                 )
 
         if not self.trained:
-            print("⚠️ Loading an untrained model because trained is set to False.")
+            logger.warning(
+                "⚠️ Loading an untrained model because trained is set to False."
+            )
             calc = OCPCalculator(checkpoint_path=self.model_path, cpu=self.cpu)
             config = calc.trainer.config
 

@@ -4,6 +4,7 @@ import os
 import time
 from pathlib import Path
 from typing import Optional
+import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,6 +20,8 @@ from material_hasher.hasher.base import HasherBase
 from material_hasher.similarity import SIMILARITY_MATCHERS
 from material_hasher.similarity.base import SimilarityMatcherBase
 from material_hasher.types import StructureEquivalenceChecker
+
+logger = logging.getLogger(__name__)
 
 STRUCTURE_CHECKERS = {**HASHERS, **SIMILARITY_MATCHERS}
 
@@ -100,7 +103,7 @@ def get_data_from_hugging_face(
     ds = get_hugging_face_dataset(token)
 
     # Convert dataset to Pandas DataFrame
-    print("Loaded dataset:", len(ds))
+    logger.info("Loaded dataset:", len(ds))
     np.random.seed(seed)
     range_select = np.random.choice(len(ds), n_test_elements, replace=False)
     df = ds.select(range_select)
@@ -115,10 +118,10 @@ def get_data_from_hugging_face(
 
         except Exception as e:
             # Log errors without interrupting processing
-            print(f"Error processing row : {e}")
+            logger.info(f"Error processing row : {e}")
 
     # Display the total number of successfully loaded structures
-    print(f"structure_data size: {len(structure_data)}")
+    logger.info(f"structure_data size: {len(structure_data)}")
 
     # Return the list of pymatgen Structure objects
     return structure_data
@@ -228,7 +231,7 @@ def hasher_sensitivity(
     else:
         raise ValueError("Unknown structure checker")
 
-    return matching_hashes / len(transformed_structures)
+    return matching_hashes / len(transformed_structures) if len(transformed_structures) > 0 else 0
 
 
 def mean_sensitivity(
@@ -268,7 +271,7 @@ def mean_sensitivity(
         sensitivities.append(sensitivity)
 
     # Calculate and return mean sensitivity
-    return sum(sensitivities) / len(sensitivities)
+    return sum(sensitivities) / len(sensitivities) if len(sensitivities) > 0 else 0
 
 
 def sensitivity_over_parameter_range(
@@ -383,7 +386,7 @@ def diagram_sensitivity(
         ][test_case]
         results[hasher_key] = results_hasher
 
-    print("final dict results : ", results)
+    logger.info("final dict results : ", results)
 
     plt.figure(figsize=(10, 6))
     for hasher_name, data in results.items():
@@ -508,7 +511,7 @@ def main():
                 fh,
             )
 
-        print(f"{structure_checker_name}: {structure_checker_time:.3f} s")
+        logger.info(f"{structure_checker_name}: {structure_checker_time:.3f} s")
 
     if args.algorithm == "all":
         with open(output_path / "all_results_disordered.json", "w") as fh:

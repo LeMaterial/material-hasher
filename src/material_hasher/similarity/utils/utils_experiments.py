@@ -6,6 +6,7 @@ from itertools import combinations, islice
 from multiprocessing import Pool
 from time import time
 from typing import Tuple
+import logging
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,8 @@ from pymatgen.core import Structure
 
 from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
 from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity
+
+logger = logging.getLogger(__name__)
 
 
 def download_and_merge_github_datasets(dataset_name: str) -> DataFrame:
@@ -67,7 +70,7 @@ def build_pymatgen_structures(df: DataFrame):
     dict
         keys: material_id, values: pymatgen structure
     """
-    print("building structures")
+    logger.info("building structures")
 
     material_id_list = df["material_id"].tolist()
     pymatgen_structures = {}
@@ -78,7 +81,7 @@ def build_pymatgen_structures(df: DataFrame):
         )
         pymatgen_structures[material_id] = structure
 
-    print("structures built")
+    logger.info("structures built")
 
     return pymatgen_structures
 
@@ -143,7 +146,7 @@ def compare_pairs_of_structure_with_pymatgen(
     pymatgen_structures = build_pymatgen_structures(df)
     material_id_list = df["material_id"].tolist()
 
-    print("comparing structures")
+    logger.info("comparing structures")
 
     # create the iterator of combinations (couples of material ids)
     iterator = combinations(material_id_list, 2)
@@ -168,7 +171,7 @@ def compare_pairs_of_structure_with_pymatgen(
                 )
 
             except Exception as e:
-                print(f"An error occurred: {e}")
+                logger.error(f"An error occurred: {e}")
                 continue
 
         results = pd.DataFrame(
@@ -184,7 +187,7 @@ def compare_pairs_of_structure_with_pymatgen(
             index=True,
             engine="pyarrow",
         )
-        print(f"batch {batch_number} done")
+        logger.info(f"batch {batch_number} done")
 
         batch_number += 1
         batched_combinations_of_ids = list(islice(iterator, batch_size))
@@ -227,7 +230,7 @@ def process_all_hashes_and_save_csv(df: pd.DataFrame, output_dir: str) -> None:
     reduced_df = [(row["material_id"], row["cif"]) for _, row in df.iterrows()]
 
     workers = os.cpu_count() - 1
-    print("Processing the dataframe")
+    logger.info("Processing the dataframe")
     with Pool(workers) as p:
         processed_results = p.map(process_hash, reduced_df)
 
@@ -533,7 +536,7 @@ def process_times_with_different_shape_datasets(
 
     results = []
     for size in sizes:
-        print(f"-------------------Size : {size}")
+        logger.info(f"-------------------Size : {size}")
         df = pd.concat([dataset] * size, ignore_index=True)
 
         hash_times = []
@@ -647,7 +650,7 @@ def apply_noise_to_structures_and_compare(
         each structure out of the 30 structures
     """
 
-    print(f"-----------------------{std}-----------------------")
+    logger.info(f"-----------------------{std}-----------------------")
 
     list_equality = []
     pymatgen_list = []
@@ -712,7 +715,7 @@ def apply_noise_to_structures_and_compare(
                 rmsd_list.append(sum(rmsd_values) / len(rmsd_values))
 
         except Exception as e:
-            print(e)
+            logger.error(e)
             continue
 
     return {
@@ -892,7 +895,7 @@ def study_trajectories(dataset, max_number_of_traj):
             )
 
             if not sufficient_conditions.empty:
-                print(
+                logger.info(
                     f"Iteration {current_number_of_traj}: Found calc_id and ionic_step"
                 )
 
@@ -936,5 +939,5 @@ def study_trajectories(dataset, max_number_of_traj):
                 current_number_of_traj += 1
 
         except Exception as e:
-            print(e)
+            logger.error(e)
             continue

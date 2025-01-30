@@ -231,7 +231,7 @@ def hasher_sensitivity(
     else:
         raise ValueError("Unknown structure checker")
 
-    return matching_hashes / len(transformed_structures)
+    return matching_hashes / len(transformed_structures) if len(transformed_structures) > 0 else 0
 
 
 def mean_sensitivity(
@@ -271,7 +271,7 @@ def mean_sensitivity(
         sensitivities.append(sensitivity)
 
     # Calculate and return mean sensitivity
-    return sum(sensitivities) / len(sensitivities)
+    return sum(sensitivities) / len(sensitivities) if len(sensitivities) > 0 else 0
 
 
 def sensitivity_over_parameter_range(

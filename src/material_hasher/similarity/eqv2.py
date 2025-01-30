@@ -224,9 +224,9 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
         score = self.get_similarity_score(structure1, structure2)
 
         if threshold is None:
-            return score < 0.01
-        else:
-            return score < threshold
+            threshold = self.threshold
+
+        return score < threshold
 
     def get_pairwise_equivalence(
         self, structures: list[Structure], threshold: Optional[float] = None

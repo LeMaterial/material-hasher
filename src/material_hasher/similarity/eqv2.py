@@ -188,11 +188,15 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
         """
 
         embeddings1 = self.get_structure_embeddings(structure1)
-        embeddings2 = self.get_structure_embeddings(structure2)
+        embeddings1_norm = np.linalg.norm(embeddings1)
 
-        return np.dot(embeddings1, embeddings2) / (
-            np.linalg.norm(embeddings1) * np.linalg.norm(embeddings2)
-        )
+        embeddings2 = self.get_structure_embeddings(structure2)
+        embeddings2_norm = np.linalg.norm(embeddings2)
+
+        if embeddings1_norm == 0 or embeddings2_norm == 0:
+            return 0.0
+
+        return np.dot(embeddings1, embeddings2) / (embeddings1_norm * embeddings2_norm)
 
     def is_equivalent(
         self,

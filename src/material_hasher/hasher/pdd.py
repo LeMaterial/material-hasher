@@ -78,11 +78,10 @@ class PointwiseDistanceDistributionHasher(HasherBase):
 
         pdd = PDD(
             periodic_set, int(self.cutoff), collapse=False
-        )  # Ensure cutoff is an integer, without collapsing similar rows
+        )
 
         # Round the PDD values to 4 decimal places for numerical stability and consistency.
         pdd = np.round(pdd, decimals=4)
-        # print(f"PDD shape: {pdd.shape}")
 
         # PDD hash array to PDD hash string
         string_pdd = pdd.tobytes()

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Optional, Union
 
@@ -13,8 +14,8 @@ from pymatgen.io.ase import AseAtomsAdaptor
 
 from material_hasher.similarity.base import SimilarityMatcherBase
 
-HF_MODEL_REPO_ID = "fairchem/OMAT24"
-HF_MODEL_PATH = "eqV2_31M_omat_mp_salex.pt"
+HF_MODEL_REPO_ID = os.getenv("HF_MODEL_REPO_ID", "fairchem/OMAT24")
+HF_MODEL_PATH = os.getenv("HF_MODEL_PATH", "eqV2_31M_omat_mp_salex.pt")
 
 
 class EquiformerV2Similarity(SimilarityMatcherBase):

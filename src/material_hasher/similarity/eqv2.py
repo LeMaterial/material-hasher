@@ -80,7 +80,7 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
                     repo_id=HF_MODEL_REPO_ID, filename=HF_MODEL_PATH
                 )
             except Exception as e:
-                logger.warning(
+                logger.error(
                     f"Failed to download the model from the Hugging Face model hub: {e}"
                 )
 

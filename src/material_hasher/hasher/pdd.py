@@ -81,7 +81,7 @@ class PointwiseDistanceDistributionHasher(HasherBase):
 
         pdd = PDD(
             periodic_set, int(self.cutoff), collapse=False
-        )
+        )  # Ensure cutoff is an integer, without collapsing similar rows
 
         return pdd
 
@@ -111,7 +111,7 @@ class PointwiseDistanceDistributionHasher(HasherBase):
         bool
             True if the two hashes are equivalent, False otherwise.
         """
-        # TODO: Should we use euclidean distance or something else?
+        # TODO(Ramlaoui + msiron): Should we use euclidean distance or something else?
         if hash1.shape != hash2.shape:
             return False
 
@@ -123,7 +123,10 @@ class PointwiseDistanceDistributionHasher(HasherBase):
     def get_pairwise_equivalence(
         self, structures: list[Structure], threshold: Optional[float] = None
     ) -> np.ndarray:
-        """Returns a matrix of equivalence between structures.
+        """Returns a matrix $M$ of equivalence between structures.
+        $M$ is a boolean symmetric matrix where entry $M[i, j]$ is ``True``
+        if the hash of entries $i$ and $j$ are equivalent (up to ``threshold``)
+        and ``False`` otherwise.
 
         Parameters
         ----------

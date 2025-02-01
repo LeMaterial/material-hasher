@@ -49,7 +49,7 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
         self,
         trained: bool = True,
         cpu: bool = False,
-        threshold: float = 0.01,
+        threshold: float = 0.999,
         n_relaxation_steps: int = 0,
         model_path: Optional[Union[str, Path]] = None,
         load_from_hf: bool = True,

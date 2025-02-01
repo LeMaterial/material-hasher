@@ -249,43 +249,6 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
 
         return score >= threshold
 
-    def get_pairwise_similarity_scores_from_embeddings(
-        self,
-        all_embeddings: list[np.ndarray],
-    ) -> np.ndarray:
-        """Returns a matrix of similarity scores between structures
-        by taking as input a list of their respective embeddings.
-
-        Returns a matrix $M$ where $M_{ij}$ is the similarity score between
-        structure $i$ and structure $j$.
-
-        Parameters
-        ----------
-        all_embeddings : list[np.ndarray]
-            List of embeddings of structures to compare.
-
-        Returns
-        -------
-        np.ndarray
-            Matrix of similarity scores between structures.
-        """
-
-        n = len(all_embeddings)
-        scores = np.zeros((n, n))
-
-        # Fill triu + diag
-        for i, embeddings1 in enumerate(all_embeddings):
-            for j, embeddings2 in enumerate(all_embeddings):
-                if i <= j:
-                    scores[i, j] = self.get_similarity_embeddings(
-                        embeddings1, embeddings2
-                    )
-
-        # Fill tril
-        scores = scores + scores.T - np.diag(np.diag(scores))
-
-        return scores
-
     def get_pairwise_equivalence(
         self, structures: list[Structure], threshold: Optional[float] = None
     ) -> np.ndarray:

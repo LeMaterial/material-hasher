@@ -142,7 +142,7 @@ class PointwiseDistanceDistributionHasher(HasherBase):
             Matrix of equivalence between structures.
         """
 
-        all_hashes = np.array(self.get_materials_hashes(structures))
+        all_hashes = self.get_materials_hashes(structures)
         equivalence_matrix = np.zeros((len(all_hashes), len(all_hashes)), dtype=bool)
 
         # Fill triu + diag

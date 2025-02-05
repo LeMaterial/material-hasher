@@ -250,4 +250,11 @@ class EquiformerV2Similarity(SimilarityMatcherBase):
         if threshold is None:
             threshold = self.threshold
 
-        return self.get_pairwise_similarity_scores(structures) >= threshold
+        all_embeddings = np.array(
+            [self.get_structure_embeddings(s) for s in structures]
+        )
+
+        return (
+            self.get_pairwise_similarity_scores_from_embeddings(all_embeddings)
+            >= threshold
+        )

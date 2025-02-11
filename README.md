@@ -1,6 +1,6 @@
 # material-hasher
 
-material-hasher provide access to comprehensive benchmark for material-fingerprinting and similarity methods, as well as implementation of fingerprint and similarity methods from the community.
+`material-hasher` provides access to comprehensive benchmarks for material-fingerprinting and similarity methods, as well as implementation of fingerprint and similarity methods from the community.
 
 ## Benchmarks
 
@@ -19,9 +19,7 @@ In this release, we include the following benchmarks:
 
 We include the following fingerprint methods:
 
--   a Structure graph, hashed via Weisfeiller-Lehman with and without symmetry labeling from SPGLib and composition `from material_hasher.hasher.entalpic import EntalpicMaterialsHasher`
--   SLICES `from material_hasher.hasher.slices import SLICESHasher`
--   PointwiseDistanceDistributionHasher `from material_hasher.hasher.pdd import PointwiseDistanceDistributionHasher`
+-   a Structure graph, hashed via Weisfeiler-Lehman with and without symmetry labeling from SPGLib and composition
 
 ## Similarity methods
 

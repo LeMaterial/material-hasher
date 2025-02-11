@@ -116,12 +116,19 @@ To test all the hasher and similarity methods on varying transformations applied
 
 Here is a sample code to get a hash result:
 
-```
-from pymatgen.core import Structure
+```python
 import numpy as np
-structure = Structure(np.eye(3)*3, ['Si'], [[0,0,0]])
+from pymatgen.core import Structure
+
 from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
+
+# create a structure
+structure = Structure(np.eye(3) * 3, ["Si"], [[0, 0, 0]])
+
+# initialize the hasher
 emh = EntalpicMaterialsHasher()
+
+# get the hash
 print(emh.get_material_hash(structure))
 ```
 

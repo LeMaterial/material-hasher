@@ -3,14 +3,15 @@ material-hasher provide access to comprehensive benchmark for material-fingerpri
 
 ## Benchmarks
 In this release, we include the following benchmarks:
-- Transformations
-- - Noise on atomistic coordinates `from material_hasher.benchmark.transformations import get_new_structure_with_gaussian_noise`
-- - Noise on lattice vectors `from material_hasher.benchmark.transformations import get_new_structure_with_strain`
-- - Isometric strain on lattice `from material_hasher.benchmark.transformations import get_new_structure_with_isometric_strain`
-- - Translations `from material_hasher.benchmark.transformations import get_new_structure_with_translation`
-- - Application of symmetry operations `from material_hasher.benchmark.transformations import get_new_structure_with_symm_ops`
-- Disordered materials
-- - Includes comprehensive test cases of structures generated via Supercell program and from Supercell paper to test whether various fingerprint or similarity metrics recognize disordered materials `from material_hasher.benchmark.run_disordered import benchmark_disordered_structures`
+
+-   Transformations
+    -   Noise on atomistic coordinates `from material_hasher.benchmark.transformations import get_new_structure_with_gaussian_noise`
+    -   Noise on lattice vectors `from material_hasher.benchmark.transformations import get_new_structure_with_strain`
+    -   Isometric strain on lattice `from material_hasher.benchmark.transformations import get_new_structure_with_isometric_strain`
+    -   Translations `from material_hasher.benchmark.transformations import get_new_structure_with_translation`
+    -   Application of symmetry operations `from material_hasher.benchmark.transformations import get_new_structure_with_symm_ops`
+-   Disordered materials
+    -   Includes comprehensive test cases of structures generated via Supercell program and from Supercell paper to test whether various fingerprint or similarity metrics recognize disordered materials `from material_hasher.benchmark.run_disordered import benchmark_disordered_structures`
 
 ## Fingerprinting methods
 We include the following fingerprint methods:

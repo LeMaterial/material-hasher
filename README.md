@@ -1,7 +1,9 @@
 # material-hasher
+
 material-hasher provide access to comprehensive benchmark for material-fingerprinting and similarity methods, as well as implementation of fingerprint and similarity methods from the community.
 
 ## Benchmarks
+
 In this release, we include the following benchmarks:
 
 -   Transformations
@@ -14,35 +16,50 @@ In this release, we include the following benchmarks:
     -   Includes comprehensive test cases of structures generated via Supercell program and from Supercell paper to test whether various fingerprint or similarity metrics recognize disordered materials `from material_hasher.benchmark.run_disordered import benchmark_disordered_structures`
 
 ## Fingerprinting methods
+
 We include the following fingerprint methods:
-- a Structure graph, hashed via Weisfeiller-Lehman with and without symmetry labeling from SPGLib and composition `from material_hasher.hasher.entalpic import EntalpicMaterialsHasher`
-- SLICES `from material_hasher.hasher.slices import SLICESHasher`
-- PointwiseDistanceDistributionHasher `from material_hasher.hasher.pdd import PointwiseDistanceDistributionHasher`
+
+-   a Structure graph, hashed via Weisfeiller-Lehman with and without symmetry labeling from SPGLib and composition `from material_hasher.hasher.entalpic import EntalpicMaterialsHasher`
+-   SLICES `from material_hasher.hasher.slices import SLICESHasher`
+-   PointwiseDistanceDistributionHasher `from material_hasher.hasher.pdd import PointwiseDistanceDistributionHasher`
 
 ## Similarity methods
+
 We include the following structure similarity methods:
-- Using GNN embeddings from trained and untrained EquiformerV2 `from material_hasher.eqv2 import EquiformerV2Similarity`
-- Pymatgen's StructureMatcher `from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity`
+
+-   Using GNN embeddings from trained and untrained EquiformerV2 `from material_hasher.eqv2 import EquiformerV2Similarity`
+-   Pymatgen's StructureMatcher `from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity`
 
 ## How to run benchmarks:
+
 ### Disordered benchmark
+
 To test all the hasher and similarity methods on disordered materials dataset, seeing if each method can match the varying amount of disordered across a set of curated materials:
+
 #### get help:
+
 `python -m material_hasher.benchmark.run_disordered --help`
 
 #### typical run (test disordered materials benchmark on all algorithms):
+
 `python -m material_hasher.benchmark.run_disordered --algorithm all`
 
 ### Transformation benchmark
+
 To test all the hasher and similarity methods on varying transformations applied to the structures across materials sampled from LeMat-Bulk:
+
 #### get help:
+
 `python -m material_hasher.benchmark.run_transformations --help`
 
 #### typical run (test Entalpic fingerprint on all test cases for a single structure):
+
 `python -m material_hasher.benchmark.run_transformations --algorithm Entalpic  --n-test-elements 1`
 
 ## How to utilize a fingerprint method:
+
 Here is a sample code to get a hash result:
+
 ```
 from pymatgen.core import Structure
 import numpy as np
@@ -53,15 +70,17 @@ print(emh.get_material_hash(structure))
 ```
 
 ## Installation
+
 We utilize uv. Please have uv installed in your environment, and then run `uv sync`.
 To utilize SLICES, please run: `uv pip install -r requirements_slices.txt`
 
-
 ## Citation
+
 We are working on a pre-print describing our fingerprint method.
 
 If your work makes use of the varying fingerprint methods, please consider citing:
 SLICES:
+
 ```
 @article{xiao2023invertible,
   title={An invertible, invariant crystal representation for inverse design of solid-state materials using generative deep learning},
@@ -74,7 +93,9 @@ SLICES:
   publisher={Nature Publishing Group UK London}
 }
 ```
-PDD: 
+
+PDD:
+
 ```
 @article{widdowson2021pointwise,
   title={Pointwise distance distributions of periodic point sets},
@@ -86,6 +107,7 @@ PDD:
 
 If your work makes use of varying similarity methods, please consider citing:
 Pymatgen:
+
 ```
 @article{ong2013python,
   title={Python Materials Genomics (pymatgen): A robust, open-source python library for materials analysis},
@@ -97,7 +119,9 @@ Pymatgen:
   publisher={Elsevier}
 }
 ```
+
 EquiformerV2
+
 ```
 @article{liao2023equiformerv2,
   title={Equiformerv2: Improved equivariant transformer for scaling to higher-degree representations},

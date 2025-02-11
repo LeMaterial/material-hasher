@@ -134,8 +134,35 @@ print(emh.get_material_hash(structure))
 
 ## Installation
 
-We utilize uv. Please have uv installed in your environment, and then run `uv sync`.
-To utilize SLICES, please run: `uv pip install -r requirements_slices.txt`
+We utilize [`uv`](https://docs.astral.sh/uv/getting-started/installation/) as our package manager ([why?](https://docs.astral.sh/uv/#highlights)).
+
+```bash
+# Either
+$ uv add git+https://github.com/lematerial/material-hasher.git
+# Or
+$ uv pip install git+https://github.com/lematerial/material-hasher.git
+# Or
+$ pip install git+https://github.com/lematerial/material-hasher.git
+```
+
+For local development, please run:
+
+```bash
+$ git clone https://github.com/lematerial/material-hasher.git
+# or
+$ git clone git@github.com:lematerial/material-hasher.git
+# then
+$ cd material-hasher
+$ uv sync
+# Optionally, you can install the package in the editable mode
+$ uv pip install -e .
+```
+
+To utilize SLICES, please run:
+
+```bash
+uv pip install -r requirements_slices.txt
+```
 
 ## Citation
 

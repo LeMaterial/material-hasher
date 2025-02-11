@@ -7,13 +7,44 @@
 In this release, we include the following benchmarks:
 
 -   Transformations
-    -   Noise on atomistic coordinates `from material_hasher.benchmark.transformations import get_new_structure_with_gaussian_noise`
-    -   Noise on lattice vectors `from material_hasher.benchmark.transformations import get_new_structure_with_strain`
-    -   Isometric strain on lattice `from material_hasher.benchmark.transformations import get_new_structure_with_isometric_strain`
-    -   Translations `from material_hasher.benchmark.transformations import get_new_structure_with_translation`
-    -   Application of symmetry operations `from material_hasher.benchmark.transformations import get_new_structure_with_symm_ops`
+
+    -   Noise on atomistic coordinates
+
+        ```python
+        from material_hasher.benchmark.transformations import get_new_structure_with_gaussian_noise
+        ```
+
+    -   Noise on lattice vectors
+
+        ```python
+        from material_hasher.benchmark.transformations import get_new_structure_with_strain
+        ```
+
+    -   Isometric strain on lattice
+
+        ```python
+        from material_hasher.benchmark.transformations import get_new_structure_with_isometric_strain
+        ```
+
+    -   Translations
+
+        ```python
+        from material_hasher.benchmark.transformations import get_new_structure_with_translation
+        ```
+
+    -   Application of symmetry operations
+
+        ```python
+        from material_hasher.benchmark.transformations import get_new_structure_with_symm_ops
+        ```
+
 -   Disordered materials
-    -   Includes comprehensive test cases of structures generated via Supercell program and from Supercell paper to test whether various fingerprint or similarity metrics recognize disordered materials `from material_hasher.benchmark.run_disordered import benchmark_disordered_structures`
+
+    -   Includes comprehensive test cases of structures generated via [Supercell](https://orex.github.io/supercell/) program and from Supercell paper to test whether various fingerprint or similarity metrics recognize disordered materials
+
+        ```python
+        from material_hasher.benchmark.run_disordered import benchmark_disordered_structures
+        ```
 
 ## Fingerprinting methods
 
@@ -21,38 +52,65 @@ We include the following fingerprint methods:
 
 -   a Structure graph, hashed via Weisfeiler-Lehman with and without symmetry labeling from SPGLib and composition
 
+    ```python
+    from material_hasher.hasher.entalpic import EntalpicMaterialsHasher
+    ```
+
+-   SLICES
+
+    ```python
+    from material_hasher.hasher.slices import SLICESHasher
+    ```
+
 ## Similarity methods
 
 We include the following structure similarity methods:
 
--   Using GNN embeddings from trained and untrained EquiformerV2 `from material_hasher.eqv2 import EquiformerV2Similarity`
--   Pymatgen's StructureMatcher `from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity`
+-   Using GNN embeddings from trained and untrained EquiformerV2
+
+    ```python
+    from material_hasher.eqv2 import EquiformerV2Similarity
+    ```
+
+-   Pymatgen's StructureMatcher
+
+    ```python
+    from material_hasher.similarity.structure_matchers import PymatgenStructureSimilarity
+    ```
 
 ## How to run benchmarks:
 
 ### Disordered benchmark
 
-To test all the hasher and similarity methods on disordered materials dataset, seeing if each method can match the varying amount of disordered across a set of curated materials:
+To test all the hasher and similarity methods on disordered materials dataset, seeing if each method can match the varying amount of disorder across a set of curated materials:
 
-#### get help:
+-   typical run (test disordered materials benchmark on all algorithms):
 
-`python -m material_hasher.benchmark.run_disordered --help`
+    ```bash
+    $ python -m material_hasher.benchmark.run_disordered --algorithm all
+    ```
 
-#### typical run (test disordered materials benchmark on all algorithms):
+-   get help:
 
-`python -m material_hasher.benchmark.run_disordered --algorithm all`
+    ```bash
+    $ python -m material_hasher.benchmark.run_disordered --help
+    ```
 
 ### Transformation benchmark
 
 To test all the hasher and similarity methods on varying transformations applied to the structures across materials sampled from LeMat-Bulk:
 
-#### get help:
+-   typical run (test Entalpic fingerprint on all test cases for a single structure):
 
-`python -m material_hasher.benchmark.run_transformations --help`
+    ```bash
+    $ python -m material_hasher.benchmark.run_transformations --algorithm Entalpic  --n-test-elements 1
+    ```
 
-#### typical run (test Entalpic fingerprint on all test cases for a single structure):
+-   get help:
 
-`python -m material_hasher.benchmark.run_transformations --algorithm Entalpic  --n-test-elements 1`
+    ```bash
+    $ python -m material_hasher.benchmark.run_transformations --help
+    ```
 
 ## How to utilize a fingerprint method:
 

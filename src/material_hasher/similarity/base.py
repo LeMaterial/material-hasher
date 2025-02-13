@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from abc import ABC, abstractmethod
 from typing import Optional
 

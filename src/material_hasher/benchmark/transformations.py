@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 import inspect
 import random
 from typing import Optional, Union

@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from shutil import which
 
 from monty.tempfile import ScratchDir

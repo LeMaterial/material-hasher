@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 # from .eqv2 import EquiformerV2Similarity
 from .structure_matchers import PymatgenStructureSimilarity
 

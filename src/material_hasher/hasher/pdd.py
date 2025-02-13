@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from hashlib import sha256
 
 import numpy as np

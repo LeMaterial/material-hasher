@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from typing import Dict
 
 from pymatgen.core.structure import Structure

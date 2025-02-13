@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from pymatgen.core import Structure
 
 from material_hasher.hasher.base import HasherBase

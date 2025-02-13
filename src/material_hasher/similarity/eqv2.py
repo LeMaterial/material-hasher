@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 import os
 from pathlib import Path
 from typing import Optional, Union

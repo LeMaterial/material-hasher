@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 # This script requires specific dependencies for proper execution.
 # Install them using:
 # uv pip install -r requirements_slices.txt

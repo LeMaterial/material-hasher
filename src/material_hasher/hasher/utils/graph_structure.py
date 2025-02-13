@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.analysis.local_env import EconNN, NearNeighbors
 from pymatgen.core import Structure

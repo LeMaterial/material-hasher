@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from itertools import combinations
 from typing import Dict, List, Tuple
 import logging

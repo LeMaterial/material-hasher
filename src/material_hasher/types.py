@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from typing import Optional, Protocol
 
 import numpy as np

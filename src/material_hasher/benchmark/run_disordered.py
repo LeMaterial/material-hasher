@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 import datetime
 import os
 import time

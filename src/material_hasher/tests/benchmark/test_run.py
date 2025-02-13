@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from material_hasher.benchmark.run_transformations import (
     diagram_sensitivity,
     get_data_from_hugging_face,

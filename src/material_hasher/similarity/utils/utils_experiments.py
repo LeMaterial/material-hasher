@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 import os
 import tempfile
 from collections import Counter

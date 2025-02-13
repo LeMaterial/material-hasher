@@ -1,3 +1,4 @@
+# Copyright 2025 Entalpic
 from networkx import Graph
 from structuregraph_helpers.hash import generate_hash
 

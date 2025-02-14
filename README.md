@@ -72,6 +72,8 @@ We include the following structure similarity methods:
     from material_hasher.eqv2 import EquiformerV2Similarity
     ```
 
+Note that this method requires access to the EquiformerV2 model trained on OMAT24 through [OMAT24 Hugging Face page](https://huggingface.co/fairchem/OMAT24). You then need to connect to your Hugging Face account via `huggingface-cli login` the first time before you run the code.
+
 -   Pymatgen's StructureMatcher
 
     ```python
@@ -156,6 +158,12 @@ $ cd material-hasher
 $ uv sync
 # Optionally, you can install the package in the editable mode
 $ uv pip install -e .
+```
+
+To utilize `EquiformerV2Similarity`, please run: 
+
+```bash
+uv sync --extra fairchem
 ```
 
 To utilize SLICES, please run:

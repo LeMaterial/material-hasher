@@ -1,5 +1,5 @@
 # Copyright 2025 Entalpic
-from hashlib import sha256
+from typing import Optional
 
 import numpy as np
 from amd import PDD, PeriodicSet
@@ -9,14 +9,16 @@ from material_hasher.hasher.base import HasherBase
 
 
 class PointwiseDistanceDistributionHasher(HasherBase):
-    def __init__(self, cutoff: float = 100.0):
+    def __init__(self, cutoff: float = 100.0, threshold: float = 1e-3):
         """
         Initialize the PDD Generator.
 
         Parameters:
         cutoff (float): Cutoff distance for PDD calculation. Default is 100.
+        threshold (float): Threshold for PDD comparison of two crystals. Default is 1e-3.
         """
         self.cutoff = int(cutoff)  # Ensure cutoff is an integer
+        self.threshold = threshold
 
     def periodicset_from_structure(self, structure: Structure) -> PeriodicSet:
         """Convert a pymatgen Structure object to a PeriodicSet.
@@ -79,13 +81,79 @@ class PointwiseDistanceDistributionHasher(HasherBase):
 
         pdd = PDD(
             periodic_set, int(self.cutoff), collapse=False
-        )
+        )  # Ensure cutoff is an integer, without collapsing similar rows
 
-        # Round the PDD values to 4 decimal places for numerical stability and consistency.
-        pdd = np.round(pdd, decimals=4)
+        return pdd
 
-        # PDD hash array to PDD hash string
-        string_pdd = pdd.tobytes()
-        string_pdd = sha256(string_pdd).hexdigest()
+    def is_hash_equivalent(
+        self,
+        hash1: np.ndarray,
+        hash2: np.ndarray,
+        threshold: Optional[float] = None,
+    ) -> bool:
+        """Check if two PDD hashes are equivalent.
+        PDD hashes are numpy arrays and are considered equivalent if the
+        Euclidean distance between them is less than a given threshold.
 
-        return string_pdd
+        Parameters
+        ----------
+        hash1 : np.ndarray
+            First hash to compare.
+        hash2 : str
+            Second hash to compare.
+        threshold : float, optional
+            Threshold to determine similarity, by default None and the
+            algorithm's default threshold is used if it exists.
+            Some algorithms may not have a threshold.
+
+        Returns
+        -------
+        bool
+            True if the two hashes are equivalent, False otherwise.
+        """
+        # TODO(Ramlaoui + msiron): Should we use euclidean distance or something else?
+        if hash1.shape != hash2.shape:
+            return False
+
+        if threshold is None:
+            threshold = self.threshold
+
+        return np.allclose(hash1, hash2, atol=threshold)
+
+    def get_pairwise_equivalence(
+        self, structures: list[Structure], threshold: Optional[float] = None
+    ) -> np.ndarray:
+        """Returns a matrix $M$ of equivalence between structures.
+        $M$ is a boolean symmetric matrix where entry $M[i, j]$ is ``True``
+        if the hash of entries $i$ and $j$ are equivalent (up to ``threshold``)
+        and ``False`` otherwise.
+
+        Parameters
+        ----------
+        structures : list[Structure]
+            List of structures to compare.
+        threshold : float, optional
+            Threshold to determine similarity, by default None and the
+            algorithm's default threshold is used if it exists.
+
+        Returns
+        -------
+        np.ndarray
+            Matrix of equivalence between structures.
+        """
+
+        all_hashes = self.get_materials_hashes(structures)
+        equivalence_matrix = np.zeros((len(all_hashes), len(all_hashes)), dtype=bool)
+
+        # Fill triu + diag
+        for i, hash1 in enumerate(all_hashes):
+            for j, hash2 in enumerate(all_hashes):
+                if i <= j:
+                    equivalence_matrix[i, j] = self.is_hash_equivalent(
+                        hash1, hash2, threshold
+                    )
+
+        # Fill tril
+        equivalence_matrix = equivalence_matrix | equivalence_matrix.T
+
+        return equivalence_matrix
